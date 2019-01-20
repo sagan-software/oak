@@ -1,0 +1,15 @@
+[profile.release]
+lto = true
+opt-level = "s"
+debug = false
+panic = "abort"
+
+[workspace]
+members = [
+    # "crates/stage0",
+    "crates/oak",
+    # "crates/oak_macros",
+    # "crates/oak_macros_impl",
+    "examples/counter",
+    # "examples/hello"
+]

@@ -1,6 +1,7 @@
 node_modules
-/target
+target
 yarn.lock
 Cargo.lock
 .DS_Store
 *.log
+pkg
