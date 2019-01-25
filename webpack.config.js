@@ -5,7 +5,7 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 // const chokidar = require("chokidar");
 // const { spawn } = require("child_process");
 
-const examples = ["counter"];
+const examples = ["counter_ecs"];
 // const exampleTarget = e => `target/wasm-bindgen/${e}_bg.wasm`;
 // const exampleTargets = examples.map(exampleTarget);
 

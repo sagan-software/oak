@@ -12,14 +12,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{Document, Element, Event, EventTarget, HtmlElement, HtmlInputElement, Node};
 
-pub struct Renderer<Model, Msg> {
-    document: Document,
-    to_remove: Vec<(Node, Node)>,
-    program: Rc<Program<Model, Msg>>,
-    root: Element,
-}
+// pub struct Renderer<Model, Msg> {
+//     document: Document,
+//     to_remove: Vec<(Node, Node)>,
+//     program: Rc<Program<Model, Msg>>,
+//     root: Element,
+// }
 
-impl<Model, Msg> MarkupRenderer<Msg> for Renderer<Model, Msg>
+impl<Model, Msg> MarkupRenderer<Msg> for Program<Model, Msg>
 where
     Msg: PartialEq + Debug + Clone + 'static,
     Model: Debug + Clone + 'static,
@@ -65,27 +65,27 @@ where
     }
 }
 
-impl<Model, Msg> Renderer<Model, Msg>
+impl<Model, Msg> Program<Model, Msg>
 where
     Msg: PartialEq + Debug + Clone + 'static,
     Model: Debug + Clone + 'static,
 {
-    pub fn new(program: &Rc<Program<Model, Msg>>) -> Self {
-        let window = web_sys::window().expect("no global `window` exists");
-        let document = window.document().expect("should have a document on window");
-        let root = document
-            .get_element_by_id("app")
-            .expect("did not find an app element");
+    // pub fn new(program: &Rc<Program<Model, Msg>>) -> Self {
+    //     let window = web_sys::window().expect("no global `window` exists");
+    //     let document = window.document().expect("should have a document on window");
+    //     let root = document
+    //         .get_element_by_id("app")
+    //         .expect("did not find an app element");
 
-        Renderer {
-            document: document,
-            to_remove: vec![],
-            program: program.clone(),
-            root,
-        }
-    }
+    //     Renderer {
+    //         document: document,
+    //         to_remove: vec![],
+    //         program: program.clone(),
+    //         root,
+    //     }
+    // }
 
-    pub fn render(
+    pub fn render2(
         &mut self,
         new_markup: &Markup<Msg>,
         old_markup: &Option<Markup<Msg>>,
@@ -277,7 +277,7 @@ where
                 js_closure,
             }) => {
                 let to_message = to_message.clone();
-                let program = self.program.clone();
+                let mut program = Rc::new(self);
                 let stop_propagation = *stop_propagation;
                 let prevent_default = *prevent_default;
                 let closure = Closure::wrap(Box::new(move |event: Event| {
@@ -288,19 +288,15 @@ where
                         event.stop_propagation();
                     }
                     let result = match &to_message {
-                        EventToMessage::StaticMsg(msg) => Program::dispatch(&program, msg),
-                        EventToMessage::Input(msg_fn) => Program::dispatch(
-                            &program,
-                            &msg_fn(
-                                event
-                                    .target()
-                                    .and_then(|target| target.dyn_into::<HtmlInputElement>().ok())
-                                    .map(|el| el.value())
-                                    .unwrap_or_default(),
-                            ),
-                        ),
-                        EventToMessage::InputWithClosure(closure) => Program::dispatch(
-                            &program,
+                        EventToMessage::StaticMsg(msg) => program.dispatch(msg),
+                        EventToMessage::Input(msg_fn) => program.dispatch(&msg_fn(
+                            event
+                                .target()
+                                .and_then(|target| target.dyn_into::<HtmlInputElement>().ok())
+                                .map(|el| el.value())
+                                .unwrap_or_default(),
+                        )),
+                        EventToMessage::InputWithClosure(closure) => program.dispatch(
                             &closure.0.call_ish(
                                 event
                                     .target()
@@ -311,13 +307,13 @@ where
                         ),
                         EventToMessage::WithFilter { msg, filter } => {
                             if filter(event) {
-                                Program::dispatch(&program, msg)
+                                program.dispatch(msg)
                             } else {
                                 Ok(())
                             }
                         }
                     };
-                }) as Box<Fn(_)>);
+                }) as Box<FnMut(_)>);
 
                 (node.as_ref() as &EventTarget)
                     .add_event_listener_with_callback(&name, closure.as_ref().unchecked_ref())?;

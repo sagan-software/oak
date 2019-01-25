@@ -10,6 +10,6 @@ members = [
     "crates/oak",
     # "crates/oak_macros",
     # "crates/oak_macros_impl",
-    "examples/counter",
+    "examples/counter_ecs",
     # "examples/hello"
 ]
