@@ -1,0 +1,11 @@
+[package]
+name = "oak_macros"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+oak_macros_impl = { path = "../oak_macros_impl" }
+proc-macro-hack = "0.5"
+proc-macro-nested = "0.1"

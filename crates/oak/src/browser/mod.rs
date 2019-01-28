@@ -1,12 +1,14 @@
-pub mod events;
-
+use hibitset::BitSet;
 use specs::prelude::{
-    Component, Entities, Join, Read, ReadStorage, System, VecStorage, WriteStorage,
+    Component, ComponentEvent, Entities, Join, Read, ReaderId, ReadStorage, Resources, System, SystemData, VecStorage, WriteStorage,
 };
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::{JsCast, prelude::*};
 use web_sys::{console, Document, Event, EventTarget, Node, Window};
+
 use crate::markup::{VirtualNode, VirtualNodeParent};
 use crate::specs_hierarchy::Parent;
+
+pub mod events;
 
 pub struct BrowserResources {
     window: Window,
@@ -95,5 +97,54 @@ impl<'a> System<'a> for BrowserNodeMounter {
                 }
             }
         }
+    }
+}
+
+#[derive(Default)]
+pub struct BrowserNodeUpdater {
+    pub dirty: BitSet,
+    pub reader_id: Option<ReaderId<ComponentEvent>>,
+}
+
+impl<'a> System<'a> for BrowserNodeUpdater {
+    type SystemData = (
+        ReadStorage<'a, VirtualNode>,
+        WriteStorage<'a, BrowserNode>,
+    );
+
+    fn run(&mut self, (virtual_nodes, mut browser_nodes): Self::SystemData) {
+        web_sys::console::log_1(&JsValue::from(0));
+        let reader_id = match &mut self.reader_id {
+            Some(reader_id) => reader_id,
+            None => return,
+        };
+
+        self.dirty.clear();
+
+        let events = virtual_nodes.channel().read(reader_id);
+        for event in events {
+            match event {
+                ComponentEvent::Modified(id) => {
+                    self.dirty.add(*id);
+                }
+                _ => (),
+            }
+        }
+        web_sys::console::log_1(&JsValue::from(1));
+        for (vnode, bnode, _) in (&virtual_nodes, &browser_nodes, &self.dirty).join() {
+            web_sys::console::log_1(&JsValue::from(2));
+            match vnode {
+                VirtualNode::Element(el) => {}
+                VirtualNode::Text(text) => {
+                    web_sys::console::log_1(&JsValue::from(3));
+                    bnode.node.set_text_content(Some(text));
+                }
+            }
+        }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+        self.reader_id = Some(WriteStorage::<VirtualNode>::fetch(&res).register_reader());
     }
 }

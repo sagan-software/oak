@@ -1,7 +1,7 @@
+use shrev::EventChannel;
 use specs::prelude::{
     Builder, Component, DenseVecStorage, Entity, EntityBuilder, FlaggedStorage, VecStorage, World,
 };
-use shrev::EventChannel;
 
 use crate::specs_hierarchy::Parent;
 
@@ -16,7 +16,7 @@ pub enum VirtualNode {
 }
 
 impl Component for VirtualNode {
-    type Storage = VecStorage<Self>;
+    type Storage = FlaggedStorage<Self, VecStorage<Self>>;
 }
 
 #[derive(Clone, Debug)]
@@ -61,3 +61,4 @@ pub fn element(name: &str, attributes: &[(&str, &str)]) -> VirtualNode {
 pub fn create_element<'a>(world: &'a mut World, name: &str, attributes: &[(&str, &str)]) -> EntityBuilder<'a> {
     world.create_entity().with(element(name, attributes))
 }
+
