@@ -35,7 +35,6 @@ impl<'a, Msg, S, C> System<'a> for StatefulSystem<Msg, S, C>
     );
 
     fn run(&mut self, (entities, state, stateful_components, mut inner_components): Self::SystemData) {
-        web_sys::console::log_2(&wasm_bindgen::JsValue::from("UPDATING STATEFUL SYSTEM"), &wasm_bindgen::JsValue::from(format!("{:#?}", state.deref())));
         for (entity, stateful) in (&entities, &stateful_components).join() {
             let new_inner_component = (stateful.func)(&state);
             inner_components.insert(entity, new_inner_component);
@@ -66,7 +65,6 @@ impl<'a, Msg, S> System<'a> for StateUpdater<Msg, S>
         for msg in msgs.read(reader_id) {
             state.update(&msg);
         }
-        web_sys::console::log_2(&wasm_bindgen::JsValue::from("UPDATING STATE"), &wasm_bindgen::JsValue::from(format!("{:#?}", state.deref())));
     }
 
     fn setup(&mut self, res: &mut Resources) {

@@ -11,5 +11,6 @@ members = [
     # "crates/oak_macros",
     # "crates/oak_macros_impl",
     "examples/counter_ecs",
+    "examples/todomvc",
     # "examples/hello"
 ]

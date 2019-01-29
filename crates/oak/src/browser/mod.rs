@@ -113,7 +113,6 @@ impl<'a> System<'a> for BrowserNodeUpdater {
     );
 
     fn run(&mut self, (virtual_nodes, mut browser_nodes): Self::SystemData) {
-        web_sys::console::log_1(&JsValue::from(0));
         let reader_id = match &mut self.reader_id {
             Some(reader_id) => reader_id,
             None => return,
@@ -130,13 +129,10 @@ impl<'a> System<'a> for BrowserNodeUpdater {
                 _ => (),
             }
         }
-        web_sys::console::log_1(&JsValue::from(1));
         for (vnode, bnode, _) in (&virtual_nodes, &browser_nodes, &self.dirty).join() {
-            web_sys::console::log_1(&JsValue::from(2));
             match vnode {
                 VirtualNode::Element(el) => {}
                 VirtualNode::Text(text) => {
-                    web_sys::console::log_1(&JsValue::from(3));
                     bnode.node.set_text_content(Some(text));
                 }
             }
