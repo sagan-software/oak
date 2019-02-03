@@ -1,5 +1,5 @@
 [package]
-name = "counter_ecs"
+name = "counter"
 version = "0.1.0"
 authors = ["Liam Curry <liam@sagan.software>"]
 edition = "2018"
@@ -13,6 +13,8 @@ wasm-bindgen = { version = "0.2" }
 js-sys = { version = "0.3" }
 # specs-hierarchy = "0.3"
 console_error_panic_hook = { version = "^0.1.5" }
+log = "0.4"
+wasm-logger = "0.1.0"
 
 [dependencies.hibitset]
 version = "0.5"
@@ -21,7 +23,7 @@ default-features = false
 [dependencies.shred]
 version = "0.7"
 default-features = false
-features = [ "nightly" ]
+# features = [ "nightly" ]
 
 [dependencies.shred-derive]
 version = "0.5"
