@@ -1,157 +1,98 @@
 pub mod attributes;
 pub mod events;
 
-pub use crate::markup::{fragment, tag, text, Attribute, Children, Markup, Tag};
+mod elements;
+pub use self::elements::*;
 
-pub type Html<Msg> = Markup<Msg>;
+use std::cell::RefCell;
+use std::rc::Rc;
+use wasm_bindgen::closure::Closure;
 
-macro_rules! declare_tags {
-    ($($x:ident)*) => ($(
-        pub fn $x<Msg: Clone>(attributes: &[Attribute<Msg>], children: &[Html<Msg>]) -> Html<Msg> {
-            Markup::Tag(Tag {
-                key: None,
-                namespace: None,
-                name: stringify!($x).to_owned(),
-                attributes: attributes.to_vec(),
-                children: Children::Nodes(children.to_vec()),
-            })
-        }
-    )*)
+#[derive(Clone, Debug)]
+pub enum Html<Msg> {
+    Element(Element<Msg>),
+    Text(String),
 }
 
-declare_tags! {
-    h1
-    h2
-    h3
-    h4
-    h5
-    h6
-    div
-    span
-    p
-    pre
-    blockquote
-    a
-    code
-    em
-    strong
-    i
-    b
-    u
-    sub
-    sup
-    ol
-    ul
-    li
-    dl
-    dt
-    dd
-    form
-    textarea
-    button
-    select
-    option
-    section
-    nav
-    article
-    aside
-    header
-    footer
-    address
-    main
-    figure
-    figcaption
-    table
-    caption
-    colgroup
-    col
-    tbody
-    thead
-    tfoot
-    tr
-    td
-    th
-    fieldset
-    legend
-    label
-    datalist
-    optgroup
-    output
-    progress
-    meter
-    audio
-    video
-    source
-    track
-    embed
-    object
-    param
-    ins
-    del
-    small
-    cite
-    dfn
-    abbr
-    time
-    var
-    samp
-    kbd
-    s
-    q
-    mark
-    ruby
-    rt
-    rp
-    bdi
-    bdo
-    wbr
-    details
-    summary
-    menuitem
-    menu
-}
-
-macro_rules! declare_void_tags {
-    ($($x:ident)*) => ($(
-        pub fn $x<Msg: Clone>(attributes: &[Attribute<Msg>]) -> Html<Msg> {
-            Markup::Tag(Tag {
-                key: None,
-                namespace: None,
-                name: stringify!($x).to_owned(),
-                attributes: attributes.to_vec(),
-                children: Children::SelfClosing,
-            })
-        }
-    )*)
-}
-
-declare_void_tags! {
-    link
-    meta
-    hr
-    br
-    input
-    iframe
-    canvas
-    img
-}
-
-#[cfg(tests)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn basic_div() {
-        let html: Html<()> = div(&[], &[]);
-        let output = html.to_string();
-        assert_eq!(&output, "<div></div>");
+impl<T: ToString, Msg> From<T> for Html<Msg> {
+    fn from(t: T) -> Html<Msg> {
+        Html::Text(t.to_string())
     }
+}
 
-    #[test]
-    fn basic_input() {
-        let html: Html<()> = input(&[]);
-        let output = html.to_string();
-        assert_eq!(&output, "<input />");
+#[derive(Clone, Debug)]
+pub struct Element<Msg> {
+    pub name: String,
+    pub attrs: Vec<Attribute<Msg>>,
+    pub children: Children<Msg>,
+}
+
+impl<Msg> From<Element<Msg>> for Html<Msg> {
+    fn from(el: Element<Msg>) -> Html<Msg> {
+        Html::Element(el)
     }
+}
 
+#[derive(Clone, Debug)]
+pub enum Children<Msg> {
+    SelfClosing,
+    Nodes(Vec<Html<Msg>>),
+}
+
+impl<Msg> Element<Msg> {
+    pub fn key(&self) -> Option<&str> {
+        for attr in &self.attrs {
+            if let Attribute::Key(ref key) = attr {
+                return Some(key);
+            }
+        }
+        None
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Attribute<Msg> {
+    Text(String, String),
+    Bool(String),
+    Key(String),
+    Event(EventListener<Msg>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct EventListener<Msg> {
+    pub js_closure: JsClosure,
+    pub type_: String,
+    pub stop_propagation: bool,
+    pub prevent_default: bool,
+    pub to_message: EventToMessage<Msg>,
+}
+
+#[derive(Clone, Default)]
+pub struct JsClosure(pub Rc<RefCell<Option<Closure<Fn(web_sys::Event)>>>>);
+
+impl std::fmt::Debug for JsClosure {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        if self.0.borrow().is_some() {
+            write!(f, "HAS A CLOSURE")
+        } else {
+            write!(f, "NO CLOSURE")
+        }
+    }
+}
+
+impl std::cmp::PartialEq for JsClosure {
+    fn eq(&self, _: &JsClosure) -> bool {
+        // This is not good enough to implent Eq, i think
+        // And its a bit weird. But it's to ignore this in the Attribute enum
+        true
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum EventToMessage<Msg> {
+    StaticMsg(Msg),
+}
+
+pub fn text<Msg, S: Into<String>>(inner: S) -> Html<Msg> {
+    Html::Text(inner.into())
 }

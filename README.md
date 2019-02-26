@@ -58,3 +58,42 @@ https://github.com/Freak613/stage0/blob/master/examples/uibench/app.js
 - https://github.com/sindreij/willow
 - https://github.com/chinedufn/percy
 - https://elm-lang.org/
+
+## Crates
+
+```
+oak
+oak-core
+oak-html
+oak-http
+oak-router
+oak-svg
+oak-time
+oak-vdom
+```
+
+## Commands
+
+```
+oak_http::get
+oak_http::post
+oak_http::send
+
+```
+
+## Subscriptions
+
+```
+oak_time::every
+oak_browser::on_animation_frame
+on_animation_frame_delta
+on_key_press
+on_key_down
+on_key_up
+on_click
+on_mouse_move
+on_mouse_down
+on_mouse_up
+on_resize
+on_visibility_change
+```

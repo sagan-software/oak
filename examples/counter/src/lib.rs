@@ -1,9 +1,6 @@
-use oak::{
-    cmd,
-    html::{button, div, events::on_click, text, Html},
-    Cmd,
-};
-use wasm_bindgen::prelude::*;
+use oak::prelude::*;
+
+pub type Model = i32;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Msg {
@@ -11,35 +8,25 @@ pub enum Msg {
     Decrement,
 }
 
-#[derive(Debug, Clone)]
-pub struct Model {
-    counter: i32,
-}
-
-fn init() -> Model {
-    Model { counter: 0 }
-}
-
-fn update(msg: &Msg, model: &mut Model) -> Box<Cmd<Msg>> {
+fn update(msg: &Msg, model: &mut Model) {
     match msg {
-        Msg::Increment => model.counter += 1,
-        Msg::Decrement => model.counter -= 1,
+        Msg::Increment => *model += 1,
+        Msg::Decrement => *model -= 1,
     }
-    Box::new(cmd::None)
 }
 
 fn view(model: &Model) -> Html<Msg> {
     div(
-        &[],
-        &[
-            button(&[on_click(Msg::Increment)], &[text("+")]),
-            div(&[], &[text(&model.counter.to_string())]),
-            button(&[on_click(Msg::Decrement)], &[text("-")]),
+        [],
+        [
+            button([on_click(Msg::Increment)], ["+"]),
+            div([], [model]),
+            button([on_click(Msg::Decrement)], ["-"]),
         ],
     )
 }
 
 #[wasm_bindgen(start)]
 pub fn main() -> Result<(), JsValue> {
-    oak::browser::sandbox(init(), view, update)
+    oak::sandbox(0, view, update).init("#app")
 }

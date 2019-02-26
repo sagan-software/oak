@@ -6,11 +6,7 @@ panic = "abort"
 
 [workspace]
 members = [
-    # "crates/stage0",
     "crates/oak",
-    # "crates/oak_macros",
-    # "crates/oak_macros_impl",
-    "examples/counter_ecs",
-    "examples/todomvc",
-    # "examples/hello"
+    "examples/counter",
+    "examples/time",
 ]

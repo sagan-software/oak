@@ -1,5 +1,5 @@
 [package]
-name = "counter"
+name = "time"
 version = "0.1.0"
 authors = ["Liam Curry <liam@sagan.software>"]
 edition = "2018"
@@ -10,4 +10,4 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 oak = {path="../../crates/oak"}
-wasm-bindgen = {version="0.2"}
+wasm-bindgen = { version="0.2" }

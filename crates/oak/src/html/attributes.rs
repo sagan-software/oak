@@ -1,6 +1,6 @@
-use crate::markup::Attribute;
+use crate::html::Attribute;
 
-macro_rules! text_attributes {
+macro_rules! declare_text_attributes {
     ($($x:ident, $tag:expr)*) => ($(
         pub fn $x<Msg>(value: &str) -> Attribute<Msg> {
             Attribute::Text($tag.to_owned(), value.to_owned())
@@ -8,11 +8,11 @@ macro_rules! text_attributes {
     )*);
 
     ($($x:ident)*) => ($(
-        text_attributes!($x, stringify!($x));
+        declare_text_attributes!($x, stringify!($x));
     )*);
 }
 
-macro_rules! bool_attributes {
+macro_rules! declare_bool_attributes {
     ($($x:ident, $tag:expr)*) => ($(
         pub fn $x<Msg>() -> Attribute<Msg> {
             Attribute::Bool($tag.to_owned())
@@ -20,11 +20,26 @@ macro_rules! bool_attributes {
     )*);
 
     ($($x:ident)*) => ($(
-        bool_attributes!($x, stringify!($x));
+        declare_bool_attributes!($x, stringify!($x));
     )*);
 }
 
-text_attributes! {
+pub fn class_list<Msg>(classes: &[(&str, bool)]) -> Attribute<Msg> {
+    let active = classes
+        .iter()
+        .filter(|(_, active)| *active)
+        .map(|(name, _)| *name)
+        .collect::<Vec<_>>();
+
+    // TODO: Change `class` to use Into<Cow> and use it here
+    Attribute::Text("className".to_owned(), active.join(" "))
+}
+
+pub fn key<Msg>(key: String) -> Attribute<Msg> {
+    Attribute::Key(key)
+}
+
+declare_text_attributes! {
     placeholder
     name
     value
@@ -34,34 +49,13 @@ text_attributes! {
     src
 }
 
-text_attributes! {
+declare_text_attributes! {
     type_, "type"
     for_, "for"
 }
 
-bool_attributes! {
+declare_bool_attributes! {
     autofocus
     checked
     hidden
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::html::{a, input, text, Html};
-
-    #[test]
-    fn string_properties() {
-        let html: Html<()> = a(&[class("test"), href("#test")], &[text("Hello World")]);
-        let output = html.to_string();
-        assert_eq!(&output, "<a class=\"test\" href=\"#test\">Hello World</a>");
-    }
-
-    #[test]
-    fn bool_properties() {
-        let html: Html<()> = input(&[checked(), autofocus()]);
-        let output = html.to_string();
-        assert_eq!(&output, "<input checked autofocus />");
-    }
-
 }

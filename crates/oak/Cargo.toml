@@ -2,44 +2,42 @@
 name = "oak"
 version = "0.1.0"
 authors = ["Liam Curry <liam@sagan.software>"]
-license = "MIT/Apache-2.0"
 edition = "2018"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
-wasm-bindgen = "0.2"
-js-sys = "0.3"
-lazy_static = "1.1.0"
-hibitset = { version = "0.5", default-features = false }
-shred = { version = "0.7", default-features = false }
-shred-derive = { version = "0.5", default-features = false }
-shrev = { version = "1.0", default-features = false }
-specs = { version = "0.14", default-features = false }
+itertools = "0.7.8"
+log = "0.4"
+wasm-bindgen = { version="0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+wasm-logger = { version = "0.1", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
 
 [dependencies.web-sys]
-version = "0.3"
+version="0.3"
+optional = true
 features = [
   'console',
-  'CssStyleDeclaration',
   'Document',
   'DocumentFragment',
+  'Text',
   'Element',
-  'Event',
-  'EventListener',
-  'EventTarget',
   'HtmlElement',
   'HtmlInputElement',
-  'KeyboardEvent',
-  'MouseEvent',
   'Node',
   'NodeList',
-  'Performance',
-  'Text',
   'Window',
+  'EventListener',
+  'EventTarget',
+  'Event',
+  'KeyboardEvent',
+  'MouseEvent',
+  'CssStyleDeclaration',
+  'Performance'
 ]
 
-[dev-dependencies]
-wasm-bindgen-test = "0.2"
-
 [features]
-parallel = ["shred/parallel", "hibitset/parallel"]
-nightly = ["shred/nightly"]
+default = ["browser"]
+js = ["js-sys", "wasm-logger", "wasm-bindgen", "console_error_panic_hook"]
+browser = ["js", "web-sys"]
+nightly = ["wasm-bindgen/nightly"]

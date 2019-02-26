@@ -21,7 +21,7 @@ default-features = false
 [dependencies.shred]
 version = "0.7"
 default-features = false
-features = [ "nightly" ]
+# features = [ "nightly" ]
 
 [dependencies.shred-derive]
 version = "0.5"
@@ -50,9 +50,3 @@ features = [
     'EventTarget',
     'HtmlInputElement',
 ]
-
-# [dependencies.specs]
-# git = "https://github.com/slide-rs/specs.git"
-# rev = "8e80134"
-
-# default-features = false

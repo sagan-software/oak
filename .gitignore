@@ -7,3 +7,4 @@ Cargo.lock
 pkg
 .idea
 *.iml
+gh-pages
