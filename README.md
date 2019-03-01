@@ -58,3 +58,37 @@ https://github.com/Freak613/stage0/blob/master/examples/uibench/app.js
 - https://github.com/sindreij/willow
 - https://github.com/chinedufn/percy
 - https://elm-lang.org/
+
+## Crates
+
+oak
+oak_core
+oak_dom
+oak_events
+oak_html
+oak_http
+oak_i18n
+oak_router
+oak_sse
+oak_svg
+oak_time
+oak_ws
+
+## Example imports
+
+oak::core::shrev
+oak::core::shred
+oak::core::specs
+oak::prelude::*
+oak::dom::VirtualNode
+oak::dom::VirtualNodeSystem
+oak::dom::BrowserNode
+oak::dom::BrowserNodeSystem
+oak::dom::ParentNode
+oak::time::Time
+oak::time::Duration
+oak::http::Request
+oak::http::Response
+oak::http::Client
+oak::events::Event
+oak::events::BrowserEventSystem

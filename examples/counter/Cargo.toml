@@ -2,26 +2,56 @@
 name = "counter"
 version = "0.1.0"
 authors = ["Liam Curry <liam@sagan.software>"]
-license = "MIT/Apache-2.0"
 edition = "2018"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
-
-[features]
-default = ["console_error_panic_hook"]
+crate-type = ["cdylib"]
 
 [dependencies]
-oak = {path="../../crates/oak"}
-cfg-if = "0.1.2"
-wasm-bindgen = "0.2"
+oak = { path = "../../crates/oak" }
+wasm-bindgen = { version = "0.2" }
+js-sys = { version = "0.3" }
+# specs-hierarchy = "0.3"
+console_error_panic_hook = { version = "^0.1.5" }
+log = "0.4"
+wasm-logger = "0.1.0"
 
-# The `console_error_panic_hook` crate provides better debugging of panics by
-# logging them with `console.error`. This is great for development, but requires
-# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
-# code size when deploying.
-console_error_panic_hook = { version = "0.1.1", optional = true }
+[dependencies.hibitset]
+version = "0.5"
+default-features = false
 
-[dev-dependencies]
-wasm-bindgen-test = "0.2"
+[dependencies.shred]
+version = "0.7"
+default-features = false
+# features = [ "nightly" ]
 
+[dependencies.shred-derive]
+version = "0.5"
+default-features = false
+
+[dependencies.shrev]
+version = "1.0"
+default-features = false
+
+[dependencies.specs]
+version = "0.14"
+default-features = false
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    'console',
+    'Document',
+    'Element',
+    'HtmlElement',
+    'MouseEvent',
+    'Text',
+    'Node',
+    'Window',
+]
+
+# [dependencies.specs]
+# git = "https://github.com/slide-rs/specs.git"
+# rev = "8e80134"
+
+# default-features = false

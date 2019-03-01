@@ -1,0 +1,40 @@
+[package]
+name = "oak_events"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+edition = "2018"
+
+[features]
+default = ["browser"]
+parallel = ["oak_core/parallel", "oak_dom/parallel"]
+nightly = ["oak_core/nightly", "oak_dom/nightly"]
+browser = ["wasm-bindgen", "web-sys", "oak_dom/browser"]
+
+[dependencies]
+oak_core = { path = "../oak_core" }
+oak_dom = { path = "../oak_dom" }
+log = "0.4"
+wasm-bindgen = { version = "0.2", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+optional = true
+features = [
+#   'console',
+#   'CssStyleDeclaration',
+#   'Document',
+#   'DocumentFragment',
+#   'Element',
+  'Event',
+  'EventListener',
+  'EventTarget',
+#   'HtmlElement',
+#   'HtmlInputElement',
+#   'KeyboardEvent',
+#   'MouseEvent',
+  'Node',
+#   'NodeList',
+#   'Performance',
+#   'Text',
+#   'Window',
+]

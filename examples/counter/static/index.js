@@ -1,1 +1,3 @@
-import("../pkg/counter").catch(console.error);
+import("../pkg/counter")
+  .then(pkg => pkg.main())
+  .catch(console.error);

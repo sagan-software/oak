@@ -1,15 +1,4 @@
-pub use shrev;
-
-pub mod browser;
-//pub mod html;
-pub mod markup;
-mod specs_hierarchy;
-pub mod app;
 pub mod state;
-
-//pub mod platform;
-//
-//pub use self::platform::{
-//    cmd::{self, Cmd},
-//    sub::{self, Sub},
-//};
+pub use oak_core as core;
+pub use oak_dom as dom;
+pub use oak_events as events;
