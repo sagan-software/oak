@@ -7,6 +7,7 @@ panic = "abort"
 [workspace]
 members = [
     "crates/oak",
+    "crates/oak_app",
     "crates/oak_core",
     "crates/oak_dom",
     "crates/oak_events",

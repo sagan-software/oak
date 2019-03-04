@@ -6,9 +6,19 @@ edition = "2018"
 
 [features]
 default = ["browser"]
-parallel = ["oak_core/parallel", "oak_dom/parallel"]
-nightly = ["oak_core/nightly", "oak_dom/nightly"]
-browser = ["wasm-bindgen", "web-sys", "oak_dom/browser"]
+parallel = [
+  "oak_core/parallel",
+  "oak_dom/parallel"
+]
+nightly = [
+  "oak_core/nightly",
+  "oak_dom/nightly"
+]
+browser = [
+  "oak_dom/browser",
+  "wasm-bindgen",
+  "web-sys",
+]
 
 [dependencies]
 oak_core = { path = "../oak_core" }
@@ -20,21 +30,8 @@ wasm-bindgen = { version = "0.2", optional = true }
 version = "0.3"
 optional = true
 features = [
-#   'console',
-#   'CssStyleDeclaration',
-#   'Document',
-#   'DocumentFragment',
-#   'Element',
-  'Event',
-  'EventListener',
-  'EventTarget',
-#   'HtmlElement',
-#   'HtmlInputElement',
-#   'KeyboardEvent',
-#   'MouseEvent',
-  'Node',
-#   'NodeList',
-#   'Performance',
-#   'Text',
-#   'Window',
+  "Event",
+  "EventListener",
+  "EventTarget",
+  "Node",
 ]

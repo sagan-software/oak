@@ -8,11 +8,11 @@ use oak_core::{
     FlaggedStorage, Hierarchy, HierarchySetupHandler, Join, Parent, Read, ReadStorage, System,
     VecStorage, World, Write,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, BTreeMap};
 
 #[derive(Clone, Debug)]
-pub enum Node {
-    Element(Element),
+pub enum VirtualNode {
+    Element(VirtualElement),
     Text(String),
     // Comment(String),
     // Doctype(String),
@@ -20,46 +20,40 @@ pub enum Node {
     // ProcessingInstruction,
 }
 
-impl Component for Node {
+impl Component for VirtualNode {
     type Storage = FlaggedStorage<Self, VecStorage<Self>>;
 }
 
 #[derive(Clone, Debug)]
-pub struct Element {
+pub struct VirtualElement {
     pub namespace: Option<String>,
     pub name: String,
-    pub attributes: Vec<Attribute>,
+    pub attributes: BTreeMap<String, String>,
     pub is_self_closing: bool,
 }
 
-impl Element {
+impl VirtualElement {
     pub fn new(name: &str) -> Self {
         Self {
             namespace: None,
             name: name.to_owned(),
-            attributes: Vec::new(),
+            attributes: BTreeMap::new(),
             is_self_closing: false,
         }
     }
 
-    pub fn into_node(self) -> Node {
-        Node::Element(self)
+    pub fn into_node(self) -> VirtualNode {
+        VirtualNode::Element(self)
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum Attribute {
-    Text(String, String),
-    Bool(String),
-}
+pub struct ParentNode(pub Entity);
 
-pub struct NodeParent(pub Entity);
-
-impl Component for NodeParent {
+impl Component for ParentNode {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-impl Parent for NodeParent {
+impl Parent for ParentNode {
     fn parent_entity(&self) -> Entity {
         self.0
     }
@@ -77,8 +71,8 @@ impl StringRenderer {
     fn push_entities<'a, T: Iterator<Item = &'a Entity>>(
         out: &mut String,
         root_entities: T,
-        nodes: &ReadStorage<'a, Node>,
-        hierarchy: &Read<'a, Hierarchy<NodeParent>, HierarchySetupHandler<NodeParent>>,
+        nodes: &ReadStorage<'a, VirtualNode>,
+        hierarchy: &Read<'a, Hierarchy<ParentNode>, HierarchySetupHandler<ParentNode>>,
     ) {
         for root_entity in root_entities {
             if let Some(root_node) = nodes.get(*root_entity) {
@@ -90,12 +84,12 @@ impl StringRenderer {
     fn push_entity<'a>(
         out: &mut String,
         root_entity: &Entity,
-        root_node: &Node,
-        nodes: &ReadStorage<'a, Node>,
-        hierarchy: &Read<'a, Hierarchy<NodeParent>, HierarchySetupHandler<NodeParent>>,
+        root_node: &VirtualNode,
+        nodes: &ReadStorage<'a, VirtualNode>,
+        hierarchy: &Read<'a, Hierarchy<ParentNode>, HierarchySetupHandler<ParentNode>>,
     ) {
         match root_node {
-            Node::Element(el) => {
+            VirtualNode::Element(el) => {
                 Self::push_open_tag(out, &el);
                 if !el.is_self_closing {
                     let children = hierarchy.children(*root_entity);
@@ -103,13 +97,13 @@ impl StringRenderer {
                     Self::push_close_tag(out, &el);
                 }
             }
-            Node::Text(text) => {
+            VirtualNode::Text(text) => {
                 out.push_str(&text);
             }
         }
     }
 
-    fn push_open_tag(out: &mut String, el: &Element) {
+    fn push_open_tag(out: &mut String, el: &VirtualElement) {
         out.push('<');
         Self::push_ns(out, &el.namespace);
         out.push_str(&el.name);
@@ -128,29 +122,20 @@ impl StringRenderer {
         }
     }
 
-    fn push_attrs(out: &mut String, attrs: &[Attribute]) {
+    fn push_attrs(out: &mut String, attrs: &BTreeMap<String, String>) {
         for attr in attrs {
             out.push(' ');
-            Self::push_attr(out, attr);
-        }
-    }
-
-    fn push_attr(out: &mut String, attr: &Attribute) {
-        match attr {
-            Attribute::Text(k, v) => {
-                out.push_str(&k);
+            for (k, v) in attrs.iter() {
+                out.push_str(k);
                 // TODO: escape
                 out.push_str("='");
-                out.push_str(&v);
+                out.push_str(v);
                 out.push('\'');
-            }
-            Attribute::Bool(k) => {
-                out.push_str(&k);
             }
         }
     }
 
-    fn push_close_tag(out: &mut String, el: &Element) {
+    fn push_close_tag(out: &mut String, el: &VirtualElement) {
         out.push_str("</");
         Self::push_ns(out, &el.namespace);
         out.push_str(&el.name);
@@ -160,8 +145,8 @@ impl StringRenderer {
 
 impl<'a> System<'a> for StringRenderer {
     type SystemData = (
-        ReadStorage<'a, Node>,
-        Read<'a, Hierarchy<NodeParent>, HierarchySetupHandler<NodeParent>>,
+        ReadStorage<'a, VirtualNode>,
+        Read<'a, Hierarchy<ParentNode>, HierarchySetupHandler<ParentNode>>,
         Read<'a, StringConfig>,
         Write<'a, String>,
     );

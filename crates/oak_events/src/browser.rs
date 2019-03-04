@@ -3,7 +3,7 @@ use oak_core::{
     Component, DenseVecStorage, EventChannel, Join, Read, ReadStorage, ReaderId, Resources,
     SetupHandler, System, SystemData, VecStorage, Write,
 };
-use oak_dom::{BrowserNode, NodeParent};
+use oak_dom::{BrowserNode, ParentNode};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;

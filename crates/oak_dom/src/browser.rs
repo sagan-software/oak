@@ -1,4 +1,4 @@
-use crate::{Attribute, Node, NodeParent};
+use crate::{VirtualNode, ParentNode};
 use oak_core::{
     BitSet, Component, ComponentEvent, Entities, Join, Parent, Read, ReadStorage, ReaderId,
     Resources, System, SystemData, VecStorage, WriteStorage,
@@ -41,7 +41,7 @@ impl<'a> System<'a> for BrowserNodeCreator {
     type SystemData = (
         Entities<'a>,
         Read<'a, BrowserResources>,
-        ReadStorage<'a, Node>,
+        ReadStorage<'a, VirtualNode>,
         WriteStorage<'a, BrowserNode>,
     );
 
@@ -49,21 +49,14 @@ impl<'a> System<'a> for BrowserNodeCreator {
         for (entity, virtual_node) in (&entities, &virtual_nodes).join() {
             if browser_nodes.get(entity).is_none() {
                 let node: web_sys::Node = match virtual_node {
-                    Node::Element(virtual_el) => {
+                    VirtualNode::Element(virtual_el) => {
                         let el = browser.document.create_element(&virtual_el.name).unwrap();
-                        for attribute in &virtual_el.attributes {
-                            match attribute {
-                                Attribute::Text(key, val) => {
-                                    el.set_attribute(&key, &val).unwrap();
-                                }
-                                Attribute::Bool(key) => {
-                                    el.set_attribute(&key, "true").unwrap();
-                                }
-                            }
+                        for (k, v) in virtual_el.attributes.iter() {
+                            el.set_attribute(k, v).unwrap();
                         }
                         el.into()
                     }
-                    Node::Text(text) => browser.document.create_text_node(&text).into(),
+                    VirtualNode::Text(text) => browser.document.create_text_node(&text).into(),
                 };
                 let browser_node = BrowserNode {
                     node,
@@ -80,7 +73,7 @@ pub struct BrowserNodeMounter;
 impl<'a> System<'a> for BrowserNodeMounter {
     type SystemData = (
         Entities<'a>,
-        ReadStorage<'a, NodeParent>,
+        ReadStorage<'a, ParentNode>,
         WriteStorage<'a, BrowserNode>,
     );
 
@@ -108,7 +101,7 @@ pub struct BrowserNodeUpdater {
 }
 
 impl<'a> System<'a> for BrowserNodeUpdater {
-    type SystemData = (ReadStorage<'a, Node>, WriteStorage<'a, BrowserNode>);
+    type SystemData = (ReadStorage<'a, VirtualNode>, WriteStorage<'a, BrowserNode>);
 
     fn run(&mut self, (virtual_nodes, mut browser_nodes): Self::SystemData) {
         let reader_id = match &mut self.reader_id {
@@ -129,8 +122,8 @@ impl<'a> System<'a> for BrowserNodeUpdater {
         }
         for (vnode, bnode, _) in (&virtual_nodes, &browser_nodes, &self.dirty).join() {
             match vnode {
-                Node::Element(el) => {}
-                Node::Text(text) => {
+                VirtualNode::Element(el) => {}
+                VirtualNode::Text(text) => {
                     bnode.node.set_text_content(Some(text));
                 }
             }
@@ -139,6 +132,6 @@ impl<'a> System<'a> for BrowserNodeUpdater {
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        self.reader_id = Some(WriteStorage::<Node>::fetch(&res).register_reader());
+        self.reader_id = Some(WriteStorage::<VirtualNode>::fetch(&res).register_reader());
     }
 }

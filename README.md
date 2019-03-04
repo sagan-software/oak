@@ -47,6 +47,7 @@ https://github.com/Freak613/stage0/blob/master/examples/uibench/app.js
 - Server-side rendering w/ client hydration
 - Client-side app
 
+
 ## Inspiration
 
 - https://github.com/DenisKolodin/yew
@@ -92,3 +93,127 @@ oak::http::Response
 oak::http::Client
 oak::events::Event
 oak::events::BrowserEventSystem
+
+## Fake code
+
+### Hello
+
+```rs
+use oak::prelude::*;
+
+fn view(name: &str) -> Html {
+    html! {
+        <h1>Hello, { name }!</h1>
+    }
+}
+
+#[wasm_bindgen(start)]
+pub fn main() -> Result<(), JsValue> {
+    App::with_state("World")
+        .with_view(view)
+        .start("body")
+}
+```
+
+### Counter
+
+```rs
+use oak::prelude::*;
+
+enum Msg {
+    Increment,
+    Decrement
+}
+
+fn update(count: i16, msg: Msg) -> ( i16, Cmd ) {
+    match msg {
+        Msg::Increment => ( count + 1, Cmd::NONE ),
+        Msg::Decrement => ( count - 1, Cmd::NONE ),
+    }
+}
+
+fn view(count: i16) -> Html {
+    html! {
+        <button onclick=Msg::Increment>+</button>
+        <div>{ count }</div>
+        <button onclick=Msg::Decrement>-</button>
+    }
+}
+
+#[wasm_bindgen(start)]
+pub fn main() -> Result<(), JsValue> {
+    App::with_state(0i16)
+        .with_view(view)
+        .with_update(update)
+        .start("body")
+}
+```
+
+### Current time
+
+```rs
+use oak::prelude::*;
+
+fn update(old: Time, new: Time) -> ( Time, Cmd ) {
+    ( new, Cmd::NONE )
+}
+
+fn view(time: Time) -> Html {
+    html! {
+        The current time is: { time }
+    }
+}
+
+fn subs(_: Time) -> Sub {
+    Time::every(Duration::from_secs(1))
+}
+
+#[wasm_bindgen(start)]
+pub fn main() -> Result<(), JsValue> {
+    App::with_state(Time::new())
+        .with_view(view)
+        .with_update(update)
+        .with_subs(subs)
+        .start("body")
+}
+```
+
+### Fetch
+
+https://guide.elm-lang.org/effects/http.html
+
+```rs
+use oak::prelude::*;
+
+#[wasm_bindgen(start)]
+pub fn main() -> Result<(), JsValue> {
+    App::with_init(init)
+        .with_view(view)
+        .with_update(update)
+        .start("body")
+}
+
+enum Model {
+    Failure,
+    Loading,
+    Success(String),
+}
+
+fn init() -> ( Model, Cmd ) {
+    ( Model::Loading, http::get("https://elm-lang.org/assets/public-opinion.txt") )
+}
+
+fn update(model: Model, msg: Result<String, http::Error>) -> ( Model, Cmd ) {
+    ( msg
+        .map(Model::Success)
+        .map_err(|_| Model::Failure), Cmd::NONE )
+}
+
+fn view(model: Model) -> Html {
+    match model {
+        Model::Failure => html! { I was unable to load your book },
+        Model::Loading => html! { Loading... },
+        Model::Success(text) => html! { <pre>{ text }</pre> }
+    }
+}
+```

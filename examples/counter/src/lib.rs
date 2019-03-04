@@ -1,8 +1,8 @@
 use console_error_panic_hook::set_once as set_panic_hook;
-use oak::events::{Event, EventListener, EventListeners};
-use oak::dom::{Element, Node, NodeParent};
+use oak::events::{Event, EventListener, EventListeners, Handler};
+use oak::dom::{VirtualElement, VirtualNode, ParentNode};
 use oak::core::EventChannel;
-use oak::state::{State, Stateful};
+use oak::app::{Stateful};
 use specs::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -20,8 +20,8 @@ enum Msg {
     Decrement,
 }
 
-impl State<Msg> for Model {
-    fn update(&mut self, msg: &Msg) {
+impl Handler<Msg> for Model {
+    fn handle(&mut self, msg: &Msg) {
         match msg {
             Msg::Increment => self.count += 1,
             Msg::Decrement => self.count -= 1,
@@ -42,13 +42,13 @@ pub fn main() {
             receiver: None,
             phantom: std::marker::PhantomData::<(MouseEvent, Msg)>,
         })
-        .with_thread_local(oak::events::EventLogger::<Msg>::new())
-        .with_thread_local(oak::state::StateUpdater {
+        .with_thread_local(oak::events::LogSystem::<Msg>::new())
+        .with_thread_local(oak::events::DispatchSystem {
             reader_id: None,
             phantom: std::marker::PhantomData::<(Msg, Model)>,
         })
-        .with_thread_local(oak::state::StatefulSystem {
-            phantom: std::marker::PhantomData::<(Msg, Model, Node)>,
+        .with_thread_local(oak::app::StatefulSystem {
+            phantom: std::marker::PhantomData::<(Msg, Model, VirtualNode)>,
         })
         .with_thread_local(oak::dom::BrowserNodeCreator)
         .with_thread_local(oak::dom::BrowserNodeMounter)
@@ -69,8 +69,8 @@ pub fn main() {
     {
         let increment_button = world
             .create_entity()
-            .with(Element::new("button").into_node())
-            .with(NodeParent(body))
+            .with(VirtualElement::new("button").into_node())
+            .with(ParentNode(body))
             .with(EventListeners(vec![EventListener::new(
                 "click",
                 |e: &MouseEvent| Msg::Increment,
@@ -78,32 +78,32 @@ pub fn main() {
             .build();
         world
             .create_entity()
-            .with(Node::Text("+".to_owned()))
-            .with(NodeParent(increment_button))
+            .with(VirtualNode::Text("+".to_owned()))
+            .with(ParentNode(increment_button))
             .build();
     }
 
     {
         let div = world
             .create_entity()
-            .with(Element::new("div").into_node())
-            .with(NodeParent(body))
+            .with(VirtualElement::new("div").into_node())
+            .with(ParentNode(body))
             .build();
         world
             .create_entity()
-            .with(oak::state::Stateful {
-                func: Box::new(|model: &Model| Node::Text(model.count.to_string())),
+            .with(oak::app::Stateful {
+                func: Box::new(|model: &Model| VirtualNode::Text(model.count.to_string())),
                 phantom: std::marker::PhantomData::<Msg>,
             })
-            .with(NodeParent(div))
+            .with(ParentNode(div))
             .build();
     }
 
     {
         let decrement_button = world
             .create_entity()
-            .with(Element::new("button").into_node())
-            .with(NodeParent(body))
+            .with(VirtualElement::new("button").into_node())
+            .with(ParentNode(body))
             .with(EventListeners(vec![EventListener::new(
                 "click",
                 |e: &MouseEvent| Msg::Decrement,
@@ -111,8 +111,8 @@ pub fn main() {
             .build();
         world
             .create_entity()
-            .with(Node::Text("-".to_owned()))
-            .with(NodeParent(decrement_button))
+            .with(VirtualNode::Text("-".to_owned()))
+            .with(ParentNode(decrement_button))
             .build();
     }
 
@@ -139,39 +139,4 @@ pub fn main() {
     et.add_event_listener_with_callback("click", cb.as_ref().unchecked_ref())
         .unwrap();
     cb.forget();
-
-    let world_rc3 = world_rc.clone();
-    let dispatcher_rc3 = dispatcher_rc.clone();
-    let cb2 = Closure::wrap(Box::new(move || {
-        web_sys::console::log_1(&JsValue::from("Balls"));
-        // let mut world = world_rc3.borrow_mut();
-        // world
-        //     .write_resource::<EventChannel<String>>()
-        //     .single_write("testing".to_owned());
-        // dispatcher_rc3.borrow_mut().dispatch(&world.res);
-        // world.maintain();
-    }) as Box<dyn Fn()>);
-    window
-        .set_interval_with_callback_and_timeout_and_arguments_0(cb2.as_ref().unchecked_ref(), 1_000)
-        .unwrap();
-    cb2.forget();
-
-    //    let world_rc2 = world_rc.clone();
-    //    let dispatcher_rc2 = dispatcher_rc.clone();
-    //    let cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-    //        let mut world = world_rc2.borrow_mut();
-    //        world
-    //            .write_resource::<EventChannel<BrowserEvent<MouseEvent>>>()
-    //            .single_write(BrowserEvent {
-    //                name: "mouseover".to_owned(),
-    //                event,
-    //            });
-    //        dispatcher_rc2.borrow_mut().dispatch(&world.res);
-    //        world.maintain();
-    //    }) as Box<dyn Fn(_)>);
-    //    let et: &web_sys::EventTarget = &web_sys::window().unwrap().document().unwrap();
-    //    et
-    //        .add_event_listener_with_callback("mouseover", cb.as_ref().unchecked_ref())
-    //        .unwrap();
-    //    cb.forget();
 }
