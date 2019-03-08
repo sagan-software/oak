@@ -8,18 +8,6 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-stage0 = { path = "../../crates/stage0" }
+oak = { path = "../../crates/oak" }
 wasm-bindgen = { version = "0.2" }
 
-[dependencies.web-sys]
-version = "0.3"
-features = [
-    'console',
-    'Document',
-    'Element',
-    'HtmlElement',
-    'Text',
-    'Node',
-    'Window',
-    'HtmlTemplateElement'
-]

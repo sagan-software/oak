@@ -1,47 +1,81 @@
-use oak_core::{
-    Component, DenseVecStorage, Entities, EventChannel, Join, Read, ReadStorage, ReaderId,
-    Resources, System, SystemData, Write, WriteStorage,
-};
-use oak_events::Handler;
-use std::ops::Deref;
+use oak_dom_node::Node as VirtualNode;
+use wasm_bindgen::JsValue;
+use web_sys::Node as BrowserNode;
 
-pub struct Stateful<Msg: Send + Sync + 'static, S: Handler<Msg>, C: Component> {
-    pub func: Box<dyn Fn(&S) -> C + Send + Sync>,
-    pub phantom: std::marker::PhantomData<Msg>,
+pub struct App<S> {
+    state: S,
+    view: Box<dyn Fn(&S) -> VirtualNode>,
+    root: BrowserNode,
+    tree: VirtualNode,
 }
 
-impl<Msg: Send + Sync + 'static, S: Handler<Msg> + 'static, C: Component> Component
-    for Stateful<Msg, S, C>
-{
-    type Storage = DenseVecStorage<Self>;
+pub trait Handler<T> {
+    fn handle(&mut self, msg: &T);
 }
 
-pub struct StatefulSystem<Msg: Send + Sync + 'static, S: Handler<Msg> + 'static, C: Component> {
-    pub phantom: std::marker::PhantomData<(Msg, S, C)>,
+pub fn with_state<S>(state: S) -> WithState<S> {
+    WithState { state }
 }
 
-impl<'a, Msg, S, C> System<'a> for StatefulSystem<Msg, S, C>
-where
-    Msg: Send + Sync + 'static,
-    S: Handler<Msg> + Send + Sync + Default + std::fmt::Debug + 'static,
-    C: Component,
-{
-    type SystemData = (
-        Entities<'a>,
-        Read<'a, S>,
-        ReadStorage<'a, Stateful<Msg, S, C>>,
-        WriteStorage<'a, C>,
-    );
+pub struct WithState<S> {
+    state: S,
+}
 
-    fn run(
-        &mut self,
-        (entities, state, stateful_components, mut inner_components): Self::SystemData,
-    ) {
-        for (entity, stateful) in (&entities, &stateful_components).join() {
-            let new_inner_component = (stateful.func)(&state);
-            inner_components
-                .insert(entity, new_inner_component)
-                .unwrap();
+impl<S> WithState<S> {
+    pub fn with_view<F>(self, func: F) -> WithView<S>
+    where
+        F: Fn(&S) -> VirtualNode + 'static,
+    {
+        WithView {
+            state: self.state,
+            view: Box::new(func),
         }
+    }
+}
+
+pub fn stateless<V>(view: V) -> Stateless
+where
+    V: Into<VirtualNode>,
+{
+    Stateless { view: view.into() }
+}
+
+pub struct Stateless {
+    view: VirtualNode,
+}
+
+impl Stateless {
+    pub fn mount(self, selector: &str) -> Result<(), JsValue> {
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        let root = document.query_selector(selector)?.unwrap();
+        let node = oak_dom_browser::create_dom_node(&self.view);
+        root.set_inner_html("");
+        root.append_child(&node.node)?;
+        Ok(())
+    }
+}
+
+pub struct WithView<S> {
+    state: S,
+    view: Box<dyn Fn(&S) -> VirtualNode>,
+}
+
+impl<S> WithView<S> {
+    pub fn mount(self, selector: &str) -> Result<(), JsValue> {
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        let root = document.query_selector(selector)?.unwrap();
+        let tree = (self.view)(&self.state);
+        let node = oak_dom_browser::create_dom_node(&tree);
+        root.set_inner_html("");
+        root.append_child(&node.node)?;
+        let app = App {
+            state: self.state,
+            view: self.view,
+            root: root.into(),
+            tree,
+        };
+        Ok(())
     }
 }

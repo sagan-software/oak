@@ -5,28 +5,9 @@ authors = ["Liam Curry <liam@sagan.software>"]
 license = "MIT/Apache-2.0"
 edition = "2018"
 
-[features]
-default = ["browser"]
-parallel = [
-  "oak_app/parallel",
-  "oak_core/parallel",
-  "oak_dom/parallel",
-  "oak_events/parallel"
-]
-nightly = [
-  "oak_app/nightly",
-  "oak_core/nightly",
-  "oak_dom/nightly",
-  "oak_events/nightly",
-]
-browser = [
-  "oak_app/browser",
-  "oak_dom/browser",
-  "oak_events/browser"
-]
-
 [dependencies]
 oak_app = { path = "../oak_app" }
-oak_core = { path = "../oak_core" }
-oak_dom = { path = "../oak_dom" }
-oak_events = { path = "../oak_events" }
+oak_dom_browser = { path = "../oak_dom_browser" }
+oak_dom_diff = { path = "../oak_dom_diff" }
+oak_dom_node = { path = "../oak_dom_node" }
+wasm-bindgen = "0.2"

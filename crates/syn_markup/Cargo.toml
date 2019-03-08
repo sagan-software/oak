@@ -1,0 +1,12 @@
+[package]
+name = "syn_markup"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+edition = "2018"
+
+[dependencies]
+proc-macro2 = { version = "0.4", features = ["span-locations"] }
+syn = { version = "0.15", features = ["full", "extra-traits"] }
+
+[dev-dependencies]
+quote = "0.6"

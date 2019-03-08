@@ -1,3 +1,11 @@
+## TODO
+
+-   [ ] Event handling
+-   [ ] HTTP requests
+-   [ ] Timers
+-   [ ] Sanitize HTML text
+-   [ ] Allow trailing spaces in HTML text
+
 ## Benchmarks
 
 ### DBMon
@@ -32,33 +40,32 @@ https://github.com/Freak613/stage0/blob/master/examples/uibench/app.js
 
 ## Wishlist
 
-- GraphQL integration
-- html!/css! macros
-- Built-in router
-- Compile-time HTML/CSS validation
-- Render CSS inline, in style block, or in static file
-- Threading with web workers
-- CLI to create/build/test/optimize projects
-- Optionally generate custom elements
-- Optional Shadow DOM
-- Document fragments <></>
-- Static site rendering
-- Server-side rendering
-- Server-side rendering w/ client hydration
-- Client-side app
-
+-   GraphQL integration
+-   html!/css! macros
+-   Built-in router
+-   Compile-time HTML/CSS validation
+-   Render CSS inline, in style block, or in static file
+-   Threading with web workers
+-   CLI to create/build/test/optimize projects
+-   Optionally generate custom elements
+-   Optional Shadow DOM
+-   Document fragments <></>
+-   Static site rendering
+-   Server-side rendering
+-   Server-side rendering w/ client hydration
+-   Client-side app
 
 ## Inspiration
 
-- https://github.com/DenisKolodin/yew
-- https://github.com/csharad/ruukh
-- https://github.com/rbalicki2/smithy
-- https://github.com/David-OConnor/seed
-- https://github.com/utkarshkukreti/draco
-- https://github.com/bodil/typed-html
-- https://github.com/sindreij/willow
-- https://github.com/chinedufn/percy
-- https://elm-lang.org/
+-   https://github.com/DenisKolodin/yew
+-   https://github.com/csharad/ruukh
+-   https://github.com/rbalicki2/smithy
+-   https://github.com/David-OConnor/seed
+-   https://github.com/utkarshkukreti/draco
+-   https://github.com/bodil/typed-html
+-   https://github.com/sindreij/willow
+-   https://github.com/chinedufn/percy
+-   https://elm-lang.org/
 
 ## Crates
 
@@ -80,7 +87,7 @@ oak_ws
 oak::core::shrev
 oak::core::shred
 oak::core::specs
-oak::prelude::*
+oak::prelude::\*
 oak::dom::VirtualNode
 oak::dom::VirtualNodeSystem
 oak::dom::BrowserNode

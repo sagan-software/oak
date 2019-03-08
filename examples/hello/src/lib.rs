@@ -1,14 +1,6 @@
 use oak::prelude::*;
 
-fn view(name: &str) -> Html {
-    html! {
-        <h1>Hello, { name }!</h1>
-    }
-}
-
-#[wasm_bindgen(start)]
+#[wasm_bindgen]
 pub fn main() -> Result<(), JsValue> {
-    App::with_state("World")
-        .with_view(view)
-        .start("body")
+    app::stateless(h1().push("Hello World!")).mount("body")
 }

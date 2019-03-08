@@ -8,8 +8,12 @@ panic = "abort"
 members = [
     "crates/oak",
     "crates/oak_app",
-    "crates/oak_core",
-    "crates/oak_dom",
-    "crates/oak_events",
+    "crates/oak_dom_browser",
+    "crates/oak_dom_diff",
+    "crates/oak_dom_node",
+    # "crates/oak_macros",
+    # "crates/oak_macros_impl",
+    # "crates/syn_markup",
     "examples/counter",
+    "examples/hello",
 ]
