@@ -1,0 +1,12 @@
+[package]
+name = "oak_vdom"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+edition = "2018"
+
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    'Event',
+]

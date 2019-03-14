@@ -1,7 +1,0 @@
-[package]
-name = "oak_dom_node"
-version = "0.1.0"
-authors = ["Liam Curry <liam@sagan.software>"]
-edition = "2018"
-
-[dependencies]

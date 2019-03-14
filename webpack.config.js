@@ -40,7 +40,7 @@ module.exports = ["counter", "hello"].map(pkg => {
             }),
             new WasmPackPlugin({
                 crateDirectory,
-                watchDirectories: [path.resolve(__dirname, "crates", "oak")],
+                watchDirectories: [path.resolve(__dirname, "crates")],
             }),
             new HtmlWebpackPlugin({
                 template: path.resolve(crateDirectory, "static", "index.html"),

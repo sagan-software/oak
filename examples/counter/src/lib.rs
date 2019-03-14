@@ -1,36 +1,26 @@
 use oak::prelude::*;
 
 #[wasm_bindgen]
-pub fn main() -> Result<(), JsValue> {
-    app::with_state(Model::default())
-        .with_view(view)
-        .mount("body")
+pub fn main() -> AppResult {
+    App::update(update).view(view).mount_to_body()
 }
 
-#[derive(Default)]
-struct Model {
-    count: i16,
-}
-
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Msg {
     Increment,
     Decrement,
 }
 
-impl Handler<Msg> for Model {
-    fn handle(&mut self, msg: &Msg) {
-        match msg {
-            Msg::Increment => self.count += 1,
-            Msg::Decrement => self.count -= 1,
-        }
+fn update(count: i32, msg: Msg) -> i32 {
+    match msg {
+        Msg::Increment => count + 1,
+        Msg::Decrement => count - 1,
     }
 }
 
-fn view(model: &Model) -> Html {
+fn view(count: i32) -> HtmlElement<Msg> {
     div()
         .push(button().on(click(Msg::Decrement)).push("-"))
-        .push(model.count)
+        .push(count)
         .push(button().on(click(Msg::Increment)).push("+"))
-        .into()
 }

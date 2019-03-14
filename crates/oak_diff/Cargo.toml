@@ -1,0 +1,11 @@
+[package]
+name = "oak_diff"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+edition = "2018"
+
+[dependencies]
+oak_vdom = { path = "../oak_vdom" }
+
+[dev-dependencies]
+oak_html = { path = "../oak_html" }

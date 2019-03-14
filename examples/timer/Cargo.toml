@@ -1,0 +1,12 @@
+[package]
+name = "timer"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+oak = { path = "../../crates/oak" }
+wasm-bindgen = { version = "0.2" }
