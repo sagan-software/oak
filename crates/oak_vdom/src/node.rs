@@ -35,6 +35,14 @@ impl<Msg> Element<Msg> {
         self
     }
 
+    pub fn push_iter<T, N>(self, nodes: T) -> Self
+    where
+        T: Iterator<Item = N>,
+        N: Into<Node<Msg>>,
+    {
+        nodes.fold(self, |el, node| el.push(node))
+    }
+
     pub fn void(mut self) -> Self {
         self.children = Children::Void;
         self

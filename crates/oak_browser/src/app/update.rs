@@ -2,8 +2,10 @@ pub trait Updater<Model, Msg> {
     fn update(&self, model: Model, msg: Msg) -> Model;
 }
 
-impl<Msg> Updater<(), Msg> for () {
-    fn update(&self, _: (), _: Msg) {}
+impl<Model, Msg> Updater<Model, Msg> for () {
+    fn update(&self, model: Model, _: Msg) -> Model {
+        model
+    }
 }
 
 impl<Model, Msg, T> Updater<Model, Msg> for T

@@ -1,9 +1,9 @@
 use oak_core::Sub;
 
-pub trait Subscriber<Model, Msg, S> where S: Sub<Msg> {
-    fn subs(&self, model: &Model) -> S;
+pub trait Subscriber<Model, Msg> {
+    fn subs(&self, model: &Model);
 }
 
-impl<Msg> Subscriber<(), Msg> for () {
-    fn subs(&self, _: ()) {}
+impl<Model, Msg> Subscriber<Model, Msg> for () {
+    fn subs(&self, _: &Model) {}
 }

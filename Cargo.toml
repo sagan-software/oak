@@ -17,4 +17,5 @@ members = [
     "examples/counter",
     "examples/hello",
     # "examples/timer",
+    "examples/uibench",
 ]

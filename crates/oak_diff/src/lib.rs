@@ -26,14 +26,14 @@ impl<'a, Msg> Patch<'a, Msg> {
     }
 }
 
-pub fn diff<'a, Msg: std::fmt::Debug>(
+pub fn diff<'a, Msg>(
     old: &'a Node<Msg>,
     new: &'a Node<Msg>,
 ) -> Vec<Patch<'a, Msg>> {
     diff_recursive(&old, &new, &mut 0)
 }
 
-fn diff_recursive<'a, 'b, Msg: std::fmt::Debug>(
+fn diff_recursive<'a, 'b, Msg>(
     old: &'a Node<Msg>,
     new: &'a Node<Msg>,
     cur_node_idx: &'b mut usize,

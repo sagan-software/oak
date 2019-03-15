@@ -26,6 +26,12 @@ pub struct EverySub<Msg> {
     state: InternalState,
 }
 
+impl<Msg: PartialEq> PartialEq for EverySub<Msg> {
+    fn eq(&self, other: &Self) -> bool {
+        self.msg == other.msg && self.duration == other.duration
+    }
+}
+
 enum InternalState {
     Init,
     Running(i32, Closure<FnMut()>, Receiver<()>),
@@ -33,7 +39,7 @@ enum InternalState {
     Canceled,
 }
 
-impl<Msg> Sub<Msg> for EverySub<Msg> {}
+impl<Msg: Clone + PartialEq> Sub<Msg> for EverySub<Msg> {}
 
 impl<Msg: Clone> Stream for EverySub<Msg> {
     type Item = Msg;
