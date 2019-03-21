@@ -1,3 +1,4 @@
+use js_sys::Reflect;
 use oak_core::futures::sync::mpsc::UnboundedSender;
 use oak_diff::Patch;
 use oak_vdom::{Children as VirtualChildren, Element as VirtualElement, Node as VirtualNode};
@@ -169,7 +170,10 @@ fn apply_element_patch<Msg: 'static>(
     match patch {
         Patch::SetAttributes(_node_idx, attributes) => {
             for (attrib_name, attrib_val) in attributes.iter() {
-                node.set_attribute(attrib_name, attrib_val)?;
+                let property_key = JsValue::from_str(attrib_name);
+                let value = JsValue::from_str(attrib_val);
+                Reflect::set(&node, &property_key, &value)?;
+                // node.set_attribute(attrib_name, attrib_val)?;
             }
 
             Ok(active_closures)

@@ -3,8 +3,7 @@ pub mod events;
 
 pub type Html<Msg> = oak_vdom::Node<Msg>;
 pub type HtmlElement<Msg> = oak_vdom::Element<Msg>;
-pub type Attribute = oak_vdom::Attribute;
-pub type Event<Msg> = oak_vdom::Event<Msg>;
+pub type Attribute<Msg> = oak_vdom::Attribute<Msg>;
 
 oak_vdom::declare_elements! {
     html

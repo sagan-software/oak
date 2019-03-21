@@ -16,6 +16,7 @@ members = [
     "crates/oak_vdom",
     "examples/counter",
     "examples/hello",
-    # "examples/timer",
+    "examples/timer",
+    "examples/todomvc",
     "examples/uibench",
 ]

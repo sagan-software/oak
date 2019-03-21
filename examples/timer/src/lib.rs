@@ -1,72 +1,63 @@
-use oak::core::futures::stream::*;
 use oak::prelude::*;
+use oak::time::{After, Every};
+
+const AFTER_SECONDS: i64 = 5;
 
 #[wasm_bindgen]
-pub fn main() -> Result<(), JsValue> {
-    app::with_init(init)
-        .with_update(update)
-        .with_view(view)
-        .mount("body")?;
-    // let fut = time::after(time::Duration::seconds(1), 0);
-    // let promise = future_to_promise(fut.map(|_| {
-    //     log::info!("AFTER");
-    //     JsValue::from(0)
-    // }));
-    let fut = time::every(time::Duration::seconds(1), 0).for_each(|_| {
-        log::info!("111 EVERY!");
-        Ok(())
-    });
-    let promise = future_to_promise(
-        fut.map(|_| JsValue::from(0))
-            .map_err(|_| JsValue::from_str("Error")),
-    );
-    Ok(())
+pub fn main() -> AppResult {
+    App::init((Model::default(), After::seconds(AFTER_SECONDS, Msg::After)))
+        .update(update)
+        .view(view)
+        .subs(subs)
+        .mount_to_body()
 }
 
+#[derive(Default)]
 struct Model {
+    is_after: bool,
+    seconds: i32,
     milliseconds: f64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Msg {
     After,
-    Every,
-    Frame(f64),
+    EverySecond,
+    EveryFrame(f64),
 }
 
-fn init() -> (Model, impl Cmd<Msg>) {
-    // let f = time::every(time::Duration::seconds(1), 0)
-    //     .into_future()
-    //     .map(|_| {
-    //         log::info!("EVERY");
-    //         JsValue::from(0)
-    //     })
-    //     .map_err(|_| JsValue::from_str("Error"));
-    // future_to_promise(f);
+fn update(mut model: Model, msg: Msg) -> Model {
+    match msg {
+        Msg::After => model.is_after = true,
+        Msg::EverySecond => model.seconds += 1,
+        Msg::EveryFrame(delta) => model.milliseconds += delta,
+    }
+    model
+}
 
-    (
-        Model { milliseconds: 0.0 },
-        time::after(time::Duration::seconds(1), Msg::After),
+fn view(model: &Model) -> HtmlElement<Msg> {
+    div().push("This page has been open for...").push(
+        ul().push(
+            li().push(if model.is_after {
+                "...at least "
+            } else {
+                "...less than "
+            })
+            .push(AFTER_SECONDS)
+            .push(" seconds."),
+        )
+        .push(li().push("...").push(model.seconds).push(" seconds."))
+        .push(
+            li().push("...")
+                .push(model.milliseconds)
+                .push(" milliseconds."),
+        ),
     )
 }
 
-fn update(model: &mut Model, msg: &Msg) -> impl Cmd<Msg> {
-    match msg {
-        Msg::After => log::info!("After"),
-        Msg::Every => log::info!("Every"),
-        Msg::Frame(delta) => model.milliseconds += delta,
-    }
-    time::after(time::Duration::seconds(1), Msg::After)
-}
-
-fn view(model: &Model) -> Html<Msg> {
-    div()
-        .push("This page has been open for ")
-        .push(model.milliseconds)
-        .push(" milliseconds.")
-        .into()
-}
-
 fn subs(model: &Model) -> impl Sub<Msg> {
-    time::every(time::Duration::seconds(1), Msg::Every)
+    Every::seconds(1, Msg::EverySecond)
+    // BatchSub::new()
+    //     .push(Every::seconds(1, Msg::EverySecond))
+    //     .push(Every::seconds(1, Msg::EveryFrame(1000.0)))
 }

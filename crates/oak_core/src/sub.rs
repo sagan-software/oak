@@ -1,5 +1,7 @@
 use futures::Stream;
-use std::hash::Hash;
 use wasm_bindgen::prelude::JsValue;
 
-pub trait Sub<Msg>: Stream<Item = Msg, Error = JsValue> + PartialEq + Drop {}
+pub trait Sub<Msg>: Stream<Item = Vec<Msg>, Error = JsValue> + Drop {
+    fn identity(&self) -> String;
+}
+

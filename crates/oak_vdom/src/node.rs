@@ -14,14 +14,17 @@ pub enum Node<Msg> {
 pub struct Element<Msg> {
     pub namespace: Option<String>,
     pub name: String,
+    pub key: Option<String>,
     pub attributes: BTreeMap<String, String>,
     pub events: BTreeMap<String, EventHandler<Msg>>,
     pub children: Children<Msg>,
 }
 
-pub struct Attribute(pub String, pub String);
-
-pub struct Event<Msg>(pub String, pub EventHandler<Msg>);
+pub enum Attribute<Msg> {
+    Text(String, String),
+    // Bool(String, bool),
+    Event(String, EventHandler<Msg>),
+}
 
 impl<Msg> Element<Msg> {
     pub fn push<T>(mut self, node: T) -> Self
@@ -40,6 +43,7 @@ impl<Msg> Element<Msg> {
         T: Iterator<Item = N>,
         N: Into<Node<Msg>>,
     {
+        // TODO: warn about nodes with missing/duplicate keys?
         nodes.fold(self, |el, node| el.push(node))
     }
 
@@ -56,13 +60,28 @@ impl<Msg> Element<Msg> {
         self
     }
 
-    pub fn set(mut self, attr: Attribute) -> Self {
-        self.attributes.insert(attr.0, attr.1);
+    pub fn set(mut self, attr: Attribute<Msg>) -> Self {
+        match attr {
+            Attribute::Text(k, v) => {
+                self.attributes.insert(k, v);
+            }
+            Attribute::Event(k, v) => {
+                self.events.insert(k, v);
+            }
+        }
         self
     }
 
-    pub fn on(mut self, event: Event<Msg>) -> Self {
-        self.events.insert(event.0, event.1);
+    pub fn set_if(mut self, predicate: bool, attr: Attribute<Msg>) -> Self {
+        if predicate {
+            self.set(attr)
+        } else {
+            self
+        }
+    }
+
+    pub fn set_key(mut self, key: Option<String>) -> Self {
+        self.key = key;
         self
     }
 }
@@ -88,7 +107,7 @@ impl<Msg> EventHandler<Msg> {
 impl<Msg> PartialEq for EventHandler<Msg> {
     fn eq(&self, _other: &Self) -> bool {
         // TODO: compare argument/return types
-        true
+        false
     }
 }
 

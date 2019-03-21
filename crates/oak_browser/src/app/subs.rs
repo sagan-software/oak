@@ -1,9 +1,24 @@
-use oak_core::Sub;
+use oak_core::{Idle, Sub};
 
-pub trait Subscriber<Model, Msg> {
-    fn subs(&self, model: &Model);
+pub trait Subscriber<Model, Msg, S>
+where
+    S: Sub<Msg>,
+{
+    fn subs(&self, model: &Model) -> S;
 }
 
-impl<Model, Msg> Subscriber<Model, Msg> for () {
-    fn subs(&self, _: &Model) {}
+impl<Model, Msg> Subscriber<Model, Msg, Idle<Msg>> for () {
+    fn subs(&self, _: &Model) -> Idle<Msg> {
+        Idle::new()
+    }
+}
+
+impl<Model, Msg, S, T> Subscriber<Model, Msg, S> for T
+where
+    T: Fn(&Model) -> S,
+    S: Sub<Msg>,
+{
+    fn subs(&self, model: &Model) -> S {
+        (self)(model)
+    }
 }

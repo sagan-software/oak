@@ -27,6 +27,7 @@ impl<'a, Model, Msg> Viewer<Model, Msg> for &'a str {
 //         *self.clone()
 //     }
 // }
+
 // impl<Model, Msg> Viewer<Model, Msg> for VirtualElement<Msg> {
 //     fn view(&self, _: &Model) -> VirtualNode<Msg> {
 //         (*self.clone()).into()
@@ -35,12 +36,11 @@ impl<'a, Model, Msg> Viewer<Model, Msg> for &'a str {
 
 impl<Model, Msg, T, V> Viewer<Model, Msg> for T
 where
-    T: Fn(Model) -> V,
+    T: Fn(&Model) -> V,
     V: Into<VirtualNode<Msg>>,
-    Model: Copy,
 {
     fn view(&self, model: &Model) -> VirtualNode<Msg> {
-        (self)(*model).into()
+        (self)(model).into()
     }
 }
 

@@ -12,7 +12,7 @@ use oak_core::{
         sync::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
         Future, Stream,
     },
-    log,
+    log, Idle, Sub,
 };
 use oak_vdom::Node as VirtualNode;
 use std::marker::PhantomData;
@@ -33,7 +33,7 @@ where
 }
 
 impl App<(), (), (), ()> {
-    pub fn init<Model, Msg, Init>(init: Init) -> AppBuilder<Model, Msg, Init, (), (), ()>
+    pub fn init<Model, Msg, Init>(init: Init) -> AppBuilder<Model, Msg, Init, (), (), (), Idle<Msg>>
     where
         Init: Initializer<Model, Msg>,
     {
@@ -48,22 +48,21 @@ impl App<(), (), (), ()> {
 
     pub fn update<Model, Msg, Update>(
         update: Update,
-    ) -> AppBuilder<Model, Msg, fn() -> Model, Update, (), ()>
+    ) -> AppBuilder<Model, Msg, Model, Update, (), (), Idle<Msg>>
     where
         Model: Default,
         Update: Updater<Model, Msg>,
     {
-        let init: fn() -> Model = Model::default;
         AppBuilder {
             phantom: PhantomData,
-            init,
+            init: Model::default(),
             update,
             view: (),
             subs: (),
         }
     }
 
-    pub fn view<View>(view: View) -> AppBuilder<(), (), (), (), View, ()>
+    pub fn view<View>(view: View) -> AppBuilder<(), (), (), (), View, (), Idle<()>>
     where
         View: Viewer<(), ()>,
     {
@@ -77,14 +76,15 @@ impl App<(), (), (), ()> {
     }
 }
 
-pub struct AppBuilder<Model, Msg, Init, Update, View, Subs>
+pub struct AppBuilder<Model, Msg, Init, Update, View, Subs, S>
 where
     Init: Initializer<Model, Msg>,
     Update: Updater<Model, Msg>,
     View: Viewer<Model, Msg>,
-    Subs: Subscriber<Model, Msg>,
+    Subs: Subscriber<Model, Msg, S>,
+    S: Sub<Msg>,
 {
-    phantom: PhantomData<(Model, Msg)>,
+    phantom: PhantomData<(Model, Msg, S)>,
     init: Init,
     update: Update,
     view: View,
@@ -93,14 +93,18 @@ where
 
 pub type AppResult = Result<(), JsValue>;
 
-impl<Model, Msg, Init, Update, View, Subs> AppBuilder<Model, Msg, Init, Update, View, Subs>
+impl<Model, Msg, Init, Update, View, Subs, S> AppBuilder<Model, Msg, Init, Update, View, Subs, S>
 where
     Init: Initializer<Model, Msg>,
     Update: Updater<Model, Msg>,
     View: Viewer<Model, Msg>,
-    Subs: Subscriber<Model, Msg>,
+    Subs: Subscriber<Model, Msg, S>,
+    S: Sub<Msg>,
 {
-    pub fn init<NewInit>(self, init: NewInit) -> AppBuilder<Model, Msg, NewInit, Update, View, Subs>
+    pub fn init<NewInit>(
+        self,
+        init: NewInit,
+    ) -> AppBuilder<Model, Msg, NewInit, Update, View, Subs, S>
     where
         NewInit: Initializer<Model, Msg>,
     {
@@ -116,7 +120,7 @@ where
     pub fn update<NewUpdate>(
         self,
         update: NewUpdate,
-    ) -> AppBuilder<Model, Msg, Init, NewUpdate, View, Subs>
+    ) -> AppBuilder<Model, Msg, Init, NewUpdate, View, Subs, S>
     where
         NewUpdate: Updater<Model, Msg>,
     {
@@ -129,7 +133,10 @@ where
         }
     }
 
-    pub fn view<NewView>(self, view: NewView) -> AppBuilder<Model, Msg, Init, Update, NewView, Subs>
+    pub fn view<NewView>(
+        self,
+        view: NewView,
+    ) -> AppBuilder<Model, Msg, Init, Update, NewView, Subs, S>
     where
         NewView: Viewer<Model, Msg>,
     {
@@ -142,9 +149,13 @@ where
         }
     }
 
-    pub fn subs<NewSubs>(self, subs: NewSubs) -> AppBuilder<Model, Msg, Init, Update, View, NewSubs>
+    pub fn subs<NewSubs, NewS>(
+        self,
+        subs: NewSubs,
+    ) -> AppBuilder<Model, Msg, Init, Update, View, NewSubs, NewS>
     where
-        NewSubs: Subscriber<Model, Msg>,
+        NewSubs: Subscriber<Model, Msg, NewS>,
+        NewS: Sub<Msg>,
     {
         AppBuilder {
             phantom: PhantomData,
@@ -156,14 +167,15 @@ where
     }
 }
 
-impl<Model, Msg, Init, Update, View, Subs> AppBuilder<Model, Msg, Init, Update, View, Subs>
+impl<Model, Msg, Init, Update, View, Subs, S> AppBuilder<Model, Msg, Init, Update, View, Subs, S>
 where
     Model: 'static,
     Msg: 'static,
     Init: Initializer<Model, Msg>,
     Update: Updater<Model, Msg> + 'static,
     View: Viewer<Model, Msg> + 'static,
-    Subs: Subscriber<Model, Msg>,
+    Subs: Subscriber<Model, Msg, S>,
+    S: Sub<Msg> + 'static,
 {
     pub fn mount(self, selector: &str) -> AppResult {
         let window = web_sys::window().unwrap();
@@ -178,16 +190,32 @@ where
 
     pub fn mount_to_node(self, node: web_sys::Node) -> AppResult {
         wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
-        let model = self.init.init();
-        let tree = self.view.view(&model);
         let (msg_sender, msg_receiver): (UnboundedSender<Msg>, UnboundedReceiver<Msg>) =
             unbounded();
+        let model = self.init.init(msg_sender.clone());
+        let tree = self.view.view(&model);
         let root = create_dom_node(&tree, msg_sender.clone());
         let root_node = root.node;
         node.append_child(&root_node)?;
 
         let update = self.update;
         let view = self.view;
+        let subs = self.subs;
+
+        let s = subs.subs(&model);
+        {
+            let msg_sender = msg_sender.clone();
+            future_to_promise(
+                s.for_each(move |msgs| {
+                    for msg in msgs.into_iter() {
+                        msg_sender.unbounded_send(msg).unwrap();
+                    }
+                    Ok(())
+                })
+                .map(|_| JsValue::NULL)
+                .map_err(|_| JsValue::NULL),
+            );
+        };
 
         future_to_promise(
             msg_receiver

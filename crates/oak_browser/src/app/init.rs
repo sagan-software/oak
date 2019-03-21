@@ -1,24 +1,36 @@
 use oak_core::Cmd;
+use oak_core::{
+    future_to_promise,
+    futures::{sync::mpsc::UnboundedSender, Future},
+};
+use wasm_bindgen::JsValue;
 
 pub trait Initializer<Model, Msg> {
-    fn init(self) -> Model;
+    fn init(self, msg_sender: UnboundedSender<Msg>) -> Model;
 }
 
-impl<Msg> Initializer<(), Msg> for () {
-    fn init(self) {}
-}
-
-impl<Model, Msg, T> Initializer<Model, Msg> for T
+impl<Model, Msg, C> Initializer<Model, Msg> for (Model, C)
 where
-    T: Fn() -> Model,
+    Msg: 'static,
+    C: Cmd<Msg> + 'static,
 {
-    fn init(self) -> Model {
-        (self)()
+    fn init(self, msg_sender: UnboundedSender<Msg>) -> Model {
+        future_to_promise(
+            (self.1)
+                .map(move |msgs| {
+                    for msg in msgs.into_iter() {
+                        msg_sender.unbounded_send(msg).unwrap();
+                    }
+                    JsValue::NULL
+                })
+                .map_err(|_| JsValue::NULL),
+        );
+        self.0
     }
 }
 
-impl<Msg> Initializer<i32, Msg> for i32 {
-    fn init(self) -> Self {
+impl<Model, Msg> Initializer<Model, Msg> for Model {
+    fn init(self, _: UnboundedSender<Msg>) -> Model {
         self
     }
 }

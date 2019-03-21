@@ -56,8 +56,7 @@ fn diff_recursive<'a, 'b, Msg>(
         // TODO: More robust key support. This is just an early stopgap to allow you to force replace
         // an element... say if it's event changed. Just change the key name for now.
         // In the future we want keys to be used to create a Patch::ReOrder to re-order siblings
-        if old_element.attributes.get("key").is_some()
-            && old_element.attributes.get("key") != new_element.attributes.get("key")
+        if old_element.key != new_element.key
         {
             replace = true;
         }

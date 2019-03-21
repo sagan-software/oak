@@ -9,20 +9,34 @@ use oak_core::{
 };
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
 
-pub fn after<Msg>(duration: Duration, msg: Msg) -> AfterCmd<Msg> {
-    AfterCmd {
-        window: None,
-        msg: Some(msg),
-        duration,
-        state: InternalState::Init,
-    }
-}
-
-pub struct AfterCmd<Msg> {
+pub struct After<Msg> {
     window: Option<web_sys::Window>,
-    msg: Option<Msg>,
+    msg: Option<Vec<Msg>>,
     duration: Duration,
     state: InternalState,
+}
+
+impl<Msg> After<Msg> {
+    pub fn duration(duration: Duration, msg: Msg) -> Self {
+        Self {
+            window: None,
+            msg: Some(vec![msg]),
+            duration,
+            state: InternalState::Init,
+        }
+    }
+
+    pub fn minutes(minutes: i64, msg: Msg) -> Self {
+        Self::duration(Duration::minutes(minutes), msg)
+    }
+
+    pub fn seconds(seconds: i64, msg: Msg) -> Self {
+        Self::duration(Duration::seconds(seconds), msg)
+    }
+
+    pub fn milliseconds(milliseconds: i64, msg: Msg) -> Self {
+        Self::duration(Duration::seconds(milliseconds), msg)
+    }
 }
 
 enum InternalState {
@@ -33,10 +47,10 @@ enum InternalState {
     Error(JsValue),
 }
 
-impl<Msg> Cmd<Msg> for AfterCmd<Msg> {}
+impl<Msg> Cmd<Msg> for After<Msg> {}
 
-impl<Msg> Future for AfterCmd<Msg> {
-    type Item = Msg;
+impl<Msg> Future for After<Msg> {
+    type Item = Vec<Msg>;
     type Error = JsValue;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
@@ -107,7 +121,7 @@ impl<Msg> Future for AfterCmd<Msg> {
     }
 }
 
-impl<Msg> Drop for AfterCmd<Msg> {
+impl<Msg> Drop for After<Msg> {
     fn drop(&mut self) {
         if let (Some(window), InternalState::Waiting(handle, _, receiver)) =
             (&self.window, &mut self.state)

@@ -9,6 +9,7 @@ pub fn element<N: Into<String>, Msg>(name: N) -> Element<Msg> {
     Element {
         namespace: None,
         name: name.into(),
+        key: None,
         children: Children::Nodes(Vec::new()),
         attributes: BTreeMap::new(),
         events: BTreeMap::new(),
@@ -31,8 +32,8 @@ macro_rules! declare_elements {
 #[macro_export]
 macro_rules! declare_text_attributes {
     ($($x:ident, $tag:expr)*) => ($(
-        pub fn $x<T: ToString>(value: T) -> $crate::Attribute {
-            $crate::Attribute($tag.to_owned(), value.to_string())
+        pub fn $x<Msg, T: ToString>(value: T) -> $crate::Attribute<Msg> {
+            $crate::Attribute::Text($tag.to_owned(), value.to_string())
         }
     )*);
 
@@ -44,8 +45,8 @@ macro_rules! declare_text_attributes {
 #[macro_export]
 macro_rules! declare_bool_attributes {
     ($($x:ident, $tag:expr)*) => ($(
-        pub fn $x() -> $crate::Attribute {
-            $crate::Attribute($tag.to_owned(), String::new())
+        pub fn $x<Msg>() -> $crate::Attribute<Msg> {
+            $crate::Attribute::Text($tag.to_owned(), String::new())
         }
     )*);
 

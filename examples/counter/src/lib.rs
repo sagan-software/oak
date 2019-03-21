@@ -18,9 +18,9 @@ fn update(count: i32, msg: Msg) -> i32 {
     }
 }
 
-fn view(count: i32) -> HtmlElement<Msg> {
+fn view(count: &i32) -> HtmlElement<Msg> {
     div()
-        .push(button().on(click(Msg::Decrement)).push("-"))
+        .push(button().set(on_click(Msg::Decrement)).push("-"))
         .push(count)
-        .push(button().on(click(Msg::Increment)).push("+"))
+        .push(button().set(on_click(Msg::Increment)).push("+"))
 }

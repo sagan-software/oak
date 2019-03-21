@@ -8,27 +8,36 @@ use oak_core::{
     },
     Sub,
 };
+use std::fmt::Debug;
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
 
-pub fn every<Msg>(duration: Duration, msg: Msg) -> EverySub<Msg> {
-    EverySub {
-        window: None,
-        msg,
-        duration,
-        state: InternalState::Init,
-    }
-}
-
-pub struct EverySub<Msg> {
+pub struct Every<Msg> {
     window: Option<web_sys::Window>,
-    msg: Msg,
+    msg: Vec<Msg>,
     duration: Duration,
     state: InternalState,
 }
 
-impl<Msg: PartialEq> PartialEq for EverySub<Msg> {
-    fn eq(&self, other: &Self) -> bool {
-        self.msg == other.msg && self.duration == other.duration
+impl<Msg> Every<Msg> {
+    pub fn duration(duration: Duration, msg: Msg) -> Self {
+        Self {
+            window: None,
+            msg: vec![msg],
+            duration,
+            state: InternalState::Init,
+        }
+    }
+
+    pub fn minutes(minutes: i64, msg: Msg) -> Self {
+        Self::duration(Duration::minutes(minutes), msg)
+    }
+
+    pub fn seconds(seconds: i64, msg: Msg) -> Self {
+        Self::duration(Duration::seconds(seconds), msg)
+    }
+
+    pub fn milliseconds(milliseconds: i64, msg: Msg) -> Self {
+        Self::duration(Duration::seconds(milliseconds), msg)
     }
 }
 
@@ -39,10 +48,14 @@ enum InternalState {
     Canceled,
 }
 
-impl<Msg: Clone + PartialEq> Sub<Msg> for EverySub<Msg> {}
+impl<Msg: Clone + Debug> Sub<Msg> for Every<Msg> {
+    fn identity(&self) -> String {
+        format!("Every{:#?}{:#?}", self.msg, self.duration)
+    }
+}
 
-impl<Msg: Clone> Stream for EverySub<Msg> {
-    type Item = Msg;
+impl<Msg: Clone> Stream for Every<Msg> {
+    type Item = Vec<Msg>;
     type Error = JsValue;
 
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
@@ -92,7 +105,7 @@ impl<Msg: Clone> Stream for EverySub<Msg> {
     }
 }
 
-impl<Msg> Drop for EverySub<Msg> {
+impl<Msg> Drop for Every<Msg> {
     fn drop(&mut self) {
         if let (Some(window), InternalState::Running(handle, _, receiver)) =
             (&self.window, &mut self.state)

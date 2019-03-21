@@ -1,3 +1,5 @@
+use oak_core::Cmd;
+
 pub trait Updater<Model, Msg> {
     fn update(&self, model: Model, msg: Msg) -> Model;
 }
@@ -16,3 +18,12 @@ where
         (self)(model, msg)
     }
 }
+
+// impl<Model, Msg, C> Updater<Model, Msg> for fn(Model, Msg) -> (Model, C)
+// where
+//     C: Cmd<Msg>,
+// {
+//     fn update(&self, model: Model, msg: Msg) -> Model {
+//         (self)(model, msg).0
+//     }
+// }
