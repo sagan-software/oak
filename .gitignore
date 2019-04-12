@@ -8,3 +8,4 @@ pkg
 .idea
 *.iml
 gh-pages
+.vscode

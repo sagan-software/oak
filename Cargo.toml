@@ -1,22 +1,58 @@
+[package]
+name = "oak"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
 [profile.release]
 lto = true
 opt-level = "s"
 debug = false
 panic = "abort"
 
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.3"
+wasm-logger = { version = "0.1" }
+futures = "0.1"
+log = "0.4"
+js-sys = "0.3"
+http = "0.1"
+chrono = "0.4"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Blob",
+    "CharacterData",
+    "Comment",
+    "console",
+    "Document",
+    "Element",
+    "Event",
+    "EventTarget",
+    "Headers",
+    "HtmlElement",
+    "KeyboardEvent",
+    "Node",
+    "NodeList",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Text",
+    "Url",
+    "UrlSearchParams",
+    "Window",
+]
+
 [workspace]
 members = [
-    "crates/oak",
-    "crates/oak_browser",
-    "crates/oak_core",
-    "crates/oak_diff",
-    "crates/oak_html",
-    "crates/oak_http",
-    "crates/oak_time",
-    "crates/oak_vdom",
-    "examples/counter",
+    # "examples/counter",
+    # "examples/temp",
     "examples/hello",
-    "examples/timer",
-    "examples/todomvc",
-    "examples/uibench",
+    # "examples/timer",
+    # "examples/todomvc",
+    # "examples/uibench",
 ]

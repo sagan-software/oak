@@ -4,7 +4,7 @@ const CleanWebpackPlugin = require("clean-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-module.exports = ["todomvc"].map(pkg => {
+module.exports = ["hello"].map(pkg => {
     const crateDirectory = path.resolve(__dirname, "examples", pkg);
     const outPath = path.resolve(__dirname, "gh-pages", pkg);
     return {
@@ -31,16 +31,18 @@ module.exports = ["todomvc"].map(pkg => {
             ],
         },
         plugins: [
-            new CleanWebpackPlugin([
-                outPath,
-                path.resolve(crateDirectory, "pkg"),
-            ]),
+            new CleanWebpackPlugin({
+                dry: true,
+                cleanOnceBeforeBuildPatterns: [
+                    path.resolve(crateDirectory, "pkg", "*"),
+                ],
+            }),
             new MiniCssExtractPlugin({
                 filename: "index.css",
             }),
             new WasmPackPlugin({
                 crateDirectory,
-                watchDirectories: [path.resolve(__dirname, "crates")],
+                watchDirectories: [path.resolve(__dirname, "src")],
             }),
             new HtmlWebpackPlugin({
                 template: path.resolve(crateDirectory, "static", "index.html"),
