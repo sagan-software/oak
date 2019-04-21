@@ -1,0 +1,75 @@
+[package]
+name = "oak"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[profile.release]
+lto = true
+opt-level = "s"
+debug = false
+panic = "abort"
+
+[features]
+default = []
+use-http = [
+    "http",
+    "web-sys/Headers",
+    "web-sys/Request",
+    "web-sys/RequestInit",
+    "web-sys/RequestMode",
+    "web-sys/Response"
+]
+use-time = [
+    "chrono"
+]
+use-log = [
+    "log",
+    "wasm-logger"
+]
+
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.3"
+futures = "0.1"
+js-sys = "0.3"
+wasm-logger = { version = "0.1", optional = true }
+log = { version = "0.4", optional = true }
+http = { version = "0.1", optional = true }
+chrono = { version = "0.4", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Blob",
+    "CharacterData",
+    "Comment",
+    "console",
+    "Document",
+    "Element",
+    "Event",
+    "EventTarget",
+    "HtmlElement",
+    "KeyboardEvent",
+    "Node",
+    "NodeList",
+    "Text",
+    "Url",
+    "UrlSearchParams",
+    "Window",
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"
+
+[workspace]
+members = [
+    "oak_vdom"
+    # "examples/counter",
+    # "examples/temp",
+    # "examples/hello",
+    # "examples/timer",
+    # "examples/todomvc",
+    # "examples/uibench",
+]

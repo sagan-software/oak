@@ -1,8 +1,8 @@
-use oak::prelude::*;
+use oak::html::{button, div};
 
-#[wasm_bindgen]
-pub fn main() -> AppResult {
-    App::update(update).view(view).mount_to_body()
+#[oak::start]
+pub fn main() {
+    oak::render((update, view, "body"))
 }
 
 #[derive(Clone, Debug)]
@@ -18,9 +18,12 @@ fn update(count: i32, msg: Msg) -> i32 {
     }
 }
 
-fn view(count: &i32) -> HtmlElement<Msg> {
-    div()
-        .push(button().set(on_click(Msg::Decrement)).push("-"))
-        .push(count)
-        .push(button().set(on_click(Msg::Increment)).push("+"))
+fn view(count: i32) -> Html<Msg> {
+    html! {
+        div(
+            button.onclick(Msg::Decrement)("-"),
+            count,
+            button.onclick(Msg::Increment)("+"),
+        )
+    }
 }

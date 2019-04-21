@@ -66,6 +66,7 @@ https://github.com/Freak613/stage0/blob/master/examples/uibench/app.js
 -   https://github.com/sindreij/willow
 -   https://github.com/chinedufn/percy
 -   https://elm-lang.org/
+-   https://github.com/dpc/stpl
 
 ## Crates
 

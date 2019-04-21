@@ -1,63 +1,75 @@
 use oak::prelude::*;
-use oak::time::{After, Every};
+use oak::time::{Duration, Interval, Timeout};
 
 const AFTER_SECONDS: i64 = 5;
 
 #[wasm_bindgen]
 pub fn main() -> AppResult {
-    App::init((Model::default(), After::seconds(AFTER_SECONDS, Msg::After)))
-        .update(update)
-        .view(view)
-        .subs(subs)
+    App::new()
+        .with_init(|dispatch| Model {
+            timeout: Timeout::new(Duration::seconds(AFTER_SECONDS), || dispatch(Msg::After)),
+            interval: Interval::new(Duration::seconds(1), || dispatch(Msg::Interval)),
+            seconds: 0,
+            milliseconds: 0.0,
+        })
+        .with_update(update)
+        .with_view(view)
         .mount_to_body()
 }
 
 #[derive(Default)]
 struct Model {
-    is_after: bool,
+    timeout: oak::time::Timeout,
+    interval: oak::time::Interval,
     seconds: i32,
     milliseconds: f64,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum Msg {
     After,
     EverySecond,
     EveryFrame(f64),
+    Reset,
 }
 
-fn update(mut model: Model, msg: Msg) -> Model {
+fn update(model: &mut Model, msg: Msg) {
     match msg {
-        Msg::After => model.is_after = true,
+        Msg::After => (),
         Msg::EverySecond => model.seconds += 1,
         Msg::EveryFrame(delta) => model.milliseconds += delta,
+        Msg::Reset => {
+            model.timeout.restart();
+            model.interval.restart();
+            model.seconds = 0;
+            model.milliseconds = 0.0;
+        }
     }
-    model
 }
 
 fn view(model: &Model) -> HtmlElement<Msg> {
-    div().push("This page has been open for...").push(
-        ul().push(
-            li().push(if model.is_after {
-                "...at least "
-            } else {
-                "...less than "
-            })
-            .push(AFTER_SECONDS)
-            .push(" seconds."),
-        )
-        .push(li().push("...").push(model.seconds).push(" seconds."))
-        .push(
-            li().push("...")
-                .push(model.milliseconds)
-                .push(" milliseconds."),
-        ),
-    )
+    div((
+        "This page has been open for...",
+        ul((
+            li((
+                if model.is_after {
+                    "...at least "
+                } else {
+                    "...less than "
+                },
+                AFTER_SECONDS,
+                " seconds.",
+            )),
+            li(("...", model.seconds, " seconds.")),
+            li(("...", model.milliseconds, " milliseconds.")),
+        )),
+        div((button.onclick(Msg::Reset)("Reset"))),
+    ))
 }
 
-fn subs(model: &Model) -> impl Sub<Msg> {
-    Every::seconds(1, Msg::EverySecond)
-    // BatchSub::new()
-    //     .push(Every::seconds(1, Msg::EverySecond))
-    //     .push(Every::seconds(1, Msg::EveryFrame(1000.0)))
-}
+// fn subs(model: &Model) -> impl Sub<Msg> {
+//     every(Duration::seconds(1), Msg::EverySecond)
+//     // BatchSub::new()
+//     //     .push(Every::seconds(1, Msg::EverySecond))
+//     //     .push(Every::seconds(1, Msg::EveryFrame(1000.0)))
+// }

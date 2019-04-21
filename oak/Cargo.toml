@@ -1,0 +1,13 @@
+[package]
+name = "oak"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+oak_core = { path = "../oak_core" }
+oak_html = { path = "../oak_html" }
+oak_render = { path = "../oak_render" }
+oak_time = { path = "../oak_time" }
+oak_vdom = { path = "../oak_vdom" }
