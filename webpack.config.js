@@ -4,7 +4,7 @@ const CleanWebpackPlugin = require("clean-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-module.exports = ["playground_bare", "playground_ecs"].map(pkg => {
+module.exports = ["uibench_ecs"].map(pkg => {
     const crateDirectory = path.resolve(__dirname, "examples", pkg);
     const outPath = path.resolve(__dirname, "gh-pages", pkg);
     return {

@@ -7,8 +7,9 @@ panic = "abort"
 [workspace]
 members = [
     # "oak_vdom",
-    "examples/playground_bare",
-    "examples/playground_ecs",
+    "examples/uibench_ecs",
+    # "examples/playground_bare",
+    # "examples/playground_ecs",
     # "examples/temp",
     # "examples/hello",
     # "examples/timer",

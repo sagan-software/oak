@@ -19,11 +19,9 @@ fn update(count: i32, msg: Msg) -> i32 {
 }
 
 fn view(count: i32) -> Html<Msg> {
-    html! {
-        div(
-            button.onclick(Msg::Decrement)("-"),
-            count,
-            button.onclick(Msg::Increment)("+"),
-        )
-    }
+    div(
+        button.onclick(Msg::Decrement)("-"),
+        count,
+        button.onclick(Msg::Increment)("+"),
+    )
 }
