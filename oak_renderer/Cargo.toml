@@ -1,0 +1,33 @@
+[package]
+name = "oak_renderer"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+oak_core = { path = "../oak_core" }
+oak_vdom = { path = "../oak_vdom" }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Blob",
+    "CharacterData",
+    "Comment",
+    "console",
+    "Document",
+    "DocumentFragment",
+    "Element",
+    "Event",
+    "EventTarget",
+    "HtmlElement",
+    "HtmlTemplateElement",
+    "KeyboardEvent",
+    "Node",
+    "NodeList",
+    "Text",
+    "Url",
+    "UrlSearchParams",
+    "Window",
+]

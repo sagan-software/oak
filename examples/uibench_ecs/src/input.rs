@@ -30,7 +30,10 @@ impl<'a> System<'a> for EventDelgationSystem {
         Write<'a, EventChannel<(CowStr, Event)>>,
     );
 
-    fn run(&mut self, (listeners, nodes, document, mut channel): Self::SystemData) {
+    fn run(
+        &mut self,
+        (listeners, nodes, document, mut channel): Self::SystemData,
+    ) {
         {
             // Setup new event listeners
             let handlers = &mut self.handlers;
@@ -44,10 +47,14 @@ impl<'a> System<'a> for EventDelgationSystem {
                     Closure::wrap(Box::new(move |event: web_sys::Event| {
                         log::info!("SENDING EVENT {:#?}", event);
                         // channel.single_write((name, Event(event)));
-                    }) as Box<FnMut(web_sys::Event)>)
+                    })
+                        as Box<FnMut(web_sys::Event)>)
                 };
                 document
-                    .add_event_listener_with_callback(&e.name, callback.as_ref().unchecked_ref())
+                    .add_event_listener_with_callback(
+                        &e.name,
+                        callback.as_ref().unchecked_ref(),
+                    )
                     .unwrap();
                 callback.forget(); // TODO store closure
                 handlers.insert(e.name.clone(), ());
@@ -56,11 +63,11 @@ impl<'a> System<'a> for EventDelgationSystem {
 
         {
             // Dispatch events
-            channel
-                .read(&mut self.reader_id.as_mut().unwrap())
-                .for_each(|(name, event)| {
+            channel.read(&mut self.reader_id.as_mut().unwrap()).for_each(
+                |(name, event)| {
                     log::info!("RECEIVED EVENT ON CHANNEL {:#?}", name);
-                });
+                },
+            );
         }
     }
 

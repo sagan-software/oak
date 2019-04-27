@@ -1,3 +1,14 @@
+[package]
+name = "oak"
+version = "0.1.0"
+authors = ["Liam Curry <liam@sagan.software>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+oak_core = { path = "./oak_core" }
+oak_vdom = { path = "./oak_vdom" }
+
 [profile.release]
 lto = true
 opt-level = "s"
@@ -6,13 +17,10 @@ panic = "abort"
 
 [workspace]
 members = [
-    # "oak_vdom",
+    "oak_core",
+    "oak_html",
+    "oak_renderer",
+    "oak_vdom",
+    # "examples/hello"
     "examples/uibench_ecs",
-    # "examples/playground_bare",
-    # "examples/playground_ecs",
-    # "examples/temp",
-    # "examples/hello",
-    # "examples/timer",
-    # "examples/todomvc",
-    # "examples/uibench",
 ]

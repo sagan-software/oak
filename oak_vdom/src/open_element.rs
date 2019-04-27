@@ -1,51 +1,81 @@
-use crate::{write_attrs, AttrValue, CowStr, ElementBuilder};
-use std::collections::BTreeMap;
+use super::{Attribute, Attributes, Children, Element, Node, Text};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct BareOpenElement {
-    pub tag: &'static str,
+    pub name: &'static str,
 }
 
-impl<Msg> ElementBuilder<Msg> for BareOpenElement {
-    type Output = SimpleOpenElement<Msg>;
-    fn attr(self, key: CowStr, val: AttrValue<Msg>) -> Self::Output {
-        let mut attrs = BTreeMap::new();
-        attrs.insert(key, val);
-        Self::Output {
-            tag: self.tag.into(),
-            attrs,
+impl BareOpenElement {
+    pub fn empty(self) -> Element {
+        Element {
+            name: self.name.into(),
+            attrs: Attributes::new(),
+            children: Children::Empty,
         }
     }
 }
 
-impl std::fmt::Display for BareOpenElement {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "<{}></{}>", self.tag, self.tag)
+impl From<BareOpenElement> for Element {
+    fn from(el: BareOpenElement) -> Self {
+        el.empty()
+    }
+}
+
+impl From<BareOpenElement> for Node {
+    fn from(el: BareOpenElement) -> Self {
+        el.empty().into()
     }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct OpenElement<Msg> {
-    pub tag: CowStr,
-    pub attrs: BTreeMap<CowStr, AttrValue<Msg>>,
+pub struct OpenElement {
+    pub name: Text,
+    pub attrs: Attributes,
 }
 
-impl<Msg> ElementBuilder<Msg> for OpenElement<Msg> {
-    type Output = Self;
-    fn attr(self, key: CowStr, val: AttrValue<Msg>) -> Self::Output {
-        let Self { tag, mut attrs } = self;
-        attrs.insert(key, val);
-        Self { tag, attrs }
-    }
-}
-
-impl<A: Render + 'static> FnOnce<(A,)> for Tag {
-    type Output = FinalTag<A>;
-    extern "rust-call" fn call_once(self, args: (A,)) -> Self::Output {
-        FinalTag {
-            tag: self.tag,
+impl OpenElement {
+    pub fn children<C>(self, children: C) -> Element
+    where
+        C: Into<Children>,
+    {
+        Element {
+            name: self.name,
             attrs: self.attrs,
-            inn: args.0,
+            children: children.into(),
         }
     }
+
+    pub fn empty(self) -> Element {
+        Element {
+            name: self.name,
+            attrs: self.attrs,
+            children: Children::Empty,
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! declare_open_elements {
+    ($($x:ident)*) => ($(
+        #[allow(non_upper_case_globals)]
+        pub const $x: $crate::BareOpenElement = $crate::BareOpenElement {
+            name: stringify!($x)
+        };
+    )*)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn declare_elements() {
+        declare_open_elements! {
+            div
+            span
+        }
+        assert_eq!(div, BareOpenElement { name: "div" });
+        assert_eq!(span, BareOpenElement { name: "span" });
+    }
+
 }

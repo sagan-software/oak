@@ -10,3 +10,40 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.3"
 futures = "0.1"
 js-sys = "0.3"
+wasm-logger = { version = "0.1" }
+log = { version = "0.4" }
+lazy_static = "1.3.0"
+hibitset = { version = "0.5", default-features = false }
+shred = { version = "0.7", default-features = false }
+shred-derive = { version = "0.5", default-features = false }
+shrev = { version = "1.0", default-features = false }
+specs = { version = "0.14.1", default-features = false }
+specs-derive = { version = "0.4.0", default-features = false }
+specs-hierarchy = { version = "0.3.1", default-features = false, git = "https://github.com/liamcurry/specs-hierarchy" }
+console_error_panic_hook = { version = "^0.1.5" }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Blob",
+    "CharacterData",
+    "Comment",
+    "console",
+    "Document",
+    "DocumentFragment",
+    "Element",
+    "Event",
+    "EventTarget",
+    "HtmlElement",
+    "HtmlTemplateElement",
+    "KeyboardEvent",
+    "Node",
+    "NodeList",
+    "Text",
+    "Url",
+    "UrlSearchParams",
+    "Window",
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"

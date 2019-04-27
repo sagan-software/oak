@@ -1,19 +1,19 @@
-use crate::vdom::{Children, Node};
-use std::{cmp::min, collections::BTreeMap, mem};
+use super::{Attribute, Children, Node, Text};
+use std::{cmp::min, collections::BTreeSet, mem};
+
+pub type NodeIdx = usize;
 
 #[derive(Debug, PartialEq)]
-pub enum Patch<'a, Msg> {
-    AppendChildren(NodeIdx, Vec<&'a Node<Msg>>),
+pub enum Patch<'a> {
+    AppendChildren(NodeIdx, Vec<&'a Node>),
     TruncateChildren(NodeIdx, usize),
-    Replace(NodeIdx, &'a Node<Msg>),
-    SetAttributes(NodeIdx, BTreeMap<&'a str, &'a str>),
-    RemoveAttributes(NodeIdx, Vec<&'a str>),
-    ChangeText(NodeIdx, &'a str),
+    Replace(NodeIdx, &'a Node),
+    SetAttributes(NodeIdx, BTreeSet<Attribute>),
+    RemoveAttributes(NodeIdx, Vec<&'a Text>),
+    ChangeText(NodeIdx, &'a Text),
 }
 
-type NodeIdx = usize;
-
-impl<'a, Msg> Patch<'a, Msg> {
+impl<'a> Patch<'a> {
     pub fn node_idx(&self) -> usize {
         match self {
             Patch::AppendChildren(node_idx, _) => *node_idx,
@@ -26,15 +26,15 @@ impl<'a, Msg> Patch<'a, Msg> {
     }
 }
 
-pub fn diff<'a, Msg>(old: &'a Node<Msg>, new: &'a Node<Msg>) -> Vec<Patch<'a, Msg>> {
+pub fn diff<'a>(old: &'a Node, new: &'a Node) -> Vec<Patch<'a>> {
     diff_recursive(&old, &new, &mut 0)
 }
 
-fn diff_recursive<'a, 'b, Msg>(
-    old: &'a Node<Msg>,
-    new: &'a Node<Msg>,
+fn diff_recursive<'a, 'b>(
+    old: &'a Node,
+    new: &'a Node,
     cur_node_idx: &'b mut usize,
-) -> Vec<Patch<'a, Msg>> {
+) -> Vec<Patch<'a>> {
     let mut patches = vec![];
     let mut replace = false;
 
@@ -43,7 +43,9 @@ fn diff_recursive<'a, 'b, Msg>(
         replace = true;
     }
 
-    if let (Node::Element(old_element), Node::Element(new_element)) = (old, new) {
+    if let (Node::Element(old_element), Node::Element(new_element)) =
+        (old, new)
+    {
         // Replace if there are different element tags
         if old_element.name != new_element.name {
             replace = true;
@@ -53,9 +55,9 @@ fn diff_recursive<'a, 'b, Msg>(
         // TODO: More robust key support. This is just an early stopgap to allow you to force replace
         // an element... say if it's event changed. Just change the key name for now.
         // In the future we want keys to be used to create a Patch::ReOrder to re-order siblings
-        if old_element.key != new_element.key {
-            replace = true;
-        }
+        // if old_element.key != new_element.key {
+        //     replace = true;
+        // }
     }
 
     // Handle replacing of a node
@@ -78,7 +80,7 @@ fn diff_recursive<'a, 'b, Msg>(
         // We're comparing two text nodes
         (Node::Text(old_text), Node::Text(new_text)) => {
             if old_text != new_text {
-                patches.push(Patch::ChangeText(*cur_node_idx, &new_text));
+                patches.push(Patch::ChangeText(*cur_node_idx, new_text));
             }
         }
 
@@ -88,7 +90,8 @@ fn diff_recursive<'a, 'b, Msg>(
             let mut remove_attributes: Vec<&str> = vec![];
 
             // TODO: -> split out into func
-            for (new_attr_name, new_attr_val) in new_element.attributes.iter() {
+            for (new_attr_name, new_attr_val) in new_element.attributes.iter()
+            {
                 match old_element.attributes.get(new_attr_name) {
                     Some(ref old_attr_val) => {
                         if old_attr_val != &new_attr_val {
@@ -102,7 +105,8 @@ fn diff_recursive<'a, 'b, Msg>(
             }
 
             // TODO: -> split out into func
-            for (old_attr_name, old_attr_val) in old_element.attributes.iter() {
+            for (old_attr_name, old_attr_val) in old_element.attributes.iter()
+            {
                 if add_attributes.get(&old_attr_name[..]).is_some() {
                     continue;
                 };
@@ -120,26 +124,38 @@ fn diff_recursive<'a, 'b, Msg>(
             }
 
             if add_attributes.len() > 0 {
-                patches.push(Patch::SetAttributes(*cur_node_idx, add_attributes));
+                patches
+                    .push(Patch::SetAttributes(*cur_node_idx, add_attributes));
             }
             if remove_attributes.len() > 0 {
-                patches.push(Patch::RemoveAttributes(*cur_node_idx, remove_attributes));
+                patches.push(Patch::RemoveAttributes(
+                    *cur_node_idx,
+                    remove_attributes,
+                ));
             }
 
-            if let (Children::Nodes(old_children), Children::Nodes(new_children)) =
-                (&old_element.children, &new_element.children)
+            if let (
+                Children::Nodes(old_children),
+                Children::Nodes(new_children),
+            ) = (&old_element.children, &new_element.children)
             {
                 let old_child_count = old_children.len();
                 let new_child_count = new_children.len();
 
                 if new_child_count > old_child_count {
-                    let append_patch: Vec<&'a Node<Msg>> =
+                    let append_patch: Vec<&'a Node> =
                         new_children[old_child_count..].iter().collect();
-                    patches.push(Patch::AppendChildren(*cur_node_idx, append_patch))
+                    patches.push(Patch::AppendChildren(
+                        *cur_node_idx,
+                        append_patch,
+                    ))
                 }
 
                 if new_child_count < old_child_count {
-                    patches.push(Patch::TruncateChildren(*cur_node_idx, new_child_count))
+                    patches.push(Patch::TruncateChildren(
+                        *cur_node_idx,
+                        new_child_count,
+                    ))
                 }
 
                 let min_count = min(old_child_count, new_child_count);
@@ -147,7 +163,11 @@ fn diff_recursive<'a, 'b, Msg>(
                     *cur_node_idx = *cur_node_idx + 1;
                     let old_child = &old_children[index];
                     let new_child = &new_children[index];
-                    patches.append(&mut diff_recursive(&old_child, &new_child, cur_node_idx))
+                    patches.append(&mut diff_recursive(
+                        &old_child,
+                        &new_child,
+                        cur_node_idx,
+                    ))
                 }
                 if new_child_count < old_child_count {
                     for child in old_children[min_count..].iter() {
@@ -156,7 +176,8 @@ fn diff_recursive<'a, 'b, Msg>(
                 }
             }
         }
-        (Node::Text(_), Node::Element(_)) | (Node::Element(_), Node::Text(_)) => {
+        (Node::Text(_), Node::Element(_))
+        | (Node::Element(_), Node::Text(_)) => {
             unreachable!("Unequal variant discriminants should already have been handled");
         }
     };
@@ -165,7 +186,10 @@ fn diff_recursive<'a, 'b, Msg>(
     patches
 }
 
-fn increment_node_idx_for_children<'a, 'b, Msg>(old: &'a Node<Msg>, cur_node_idx: &'b mut usize) {
+fn increment_node_idx_for_children<'a, 'b>(
+    old: &'a Node,
+    cur_node_idx: &'b mut usize,
+) {
     *cur_node_idx += 1;
     if let Node::Element(element_node) = old {
         if let Children::Nodes(element_children) = &element_node.children {

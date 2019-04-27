@@ -1,11 +1,6 @@
-pub mod attributes;
-pub mod events;
+use oak_vdom::{declare_open_elements, declare_void_elements};
 
-pub type Html<Msg> = crate::vdom::Node<Msg>;
-pub type Element<Msg> = crate::vdom::Element<Msg>;
-pub type Attribute<Msg> = crate::vdom::Attribute<Msg>;
-
-declare_elements! {
+declare_open_elements! {
     html
     head
     body
@@ -98,12 +93,15 @@ declare_elements! {
     summary
     menuitem
     menu
+    iframe
+    canvas
+}
+
+declare_void_elements! {
     link
     meta
     hr
     br
     input
-    iframe
-    canvas
     img
 }

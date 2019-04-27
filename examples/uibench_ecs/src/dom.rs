@@ -26,7 +26,10 @@ web_sys_wrapper!(Element);
 
 pub type CustomElementTemplates = HashMap<CowStr, Element>;
 
-pub fn compile_template<S: Into<CowStr>>(world: &mut World, template: S) -> web_sys::Element {
+pub fn compile_template<S: Into<CowStr>>(
+    world: &mut World,
+    template: S,
+) -> web_sys::Element {
     // TODO Assumes CompilerTemplate and CustomElementTemplates have been registered
     let template_str = template.into();
     {
@@ -100,10 +103,8 @@ impl<'a> System<'a> for NodeSystem {
         self.inserted.clear();
         self.removed.clear();
 
-        parents
-            .channel()
-            .read(self.reader_id.as_mut().unwrap())
-            .for_each(|event| match event {
+        parents.channel().read(self.reader_id.as_mut().unwrap()).for_each(
+            |event| match event {
                 ComponentEvent::Inserted(id) => {
                     self.inserted.add(*id);
                 }
@@ -111,13 +112,13 @@ impl<'a> System<'a> for NodeSystem {
                     self.removed.add(*id);
                 }
                 _ => (),
-            });
+            },
+        );
 
         // TODO remove all children of removed entities in self.removed
 
-        (&nodes, &parents, &self.inserted)
-            .join()
-            .for_each(|(node, parent, _)| {
+        (&nodes, &parents, &self.inserted).join().for_each(
+            |(node, parent, _)| {
                 if node.0.is_connected() {
                     // TODO verify that node is connected to parent?
                     return;
@@ -130,11 +131,13 @@ impl<'a> System<'a> for NodeSystem {
                 };
 
                 parent_node.0.append_child(&node.0).unwrap();
-            });
+            },
+        );
     }
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        self.reader_id = Some(WriteStorage::<NodeParent>::fetch(&res).register_reader());
+        self.reader_id =
+            Some(WriteStorage::<NodeParent>::fetch(&res).register_reader());
     }
 }

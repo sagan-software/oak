@@ -1,6 +1,10 @@
-use futures::{Async, Future, Poll, Stream};
-use wasm_bindgen::prelude::JsValue;
-
-pub trait Task<Msg>: Future<Item = Vec<Msg>, Error = JsValue> + Drop {}
-
-pub trait Sub<Msg>: Stream<Item = Vec<Msg>, Error = JsValue> + Drop {}
+pub use futures;
+pub use log;
+pub use shred;
+pub use shred_derive;
+pub use shrev;
+pub use specs;
+pub use specs_hierarchy;
+pub use wasm_bindgen;
+pub use wasm_bindgen_futures;
+pub use web_sys;

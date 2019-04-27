@@ -7,8 +7,12 @@ const AFTER_SECONDS: i64 = 5;
 pub fn main() -> AppResult {
     App::new()
         .with_init(|dispatch| Model {
-            timeout: Timeout::new(Duration::seconds(AFTER_SECONDS), || dispatch(Msg::After)),
-            interval: Interval::new(Duration::seconds(1), || dispatch(Msg::Interval)),
+            timeout: Timeout::new(Duration::seconds(AFTER_SECONDS), || {
+                dispatch(Msg::After)
+            }),
+            interval: Interval::new(Duration::seconds(1), || {
+                dispatch(Msg::Interval)
+            }),
             seconds: 0,
             milliseconds: 0.0,
         })
@@ -47,24 +51,22 @@ fn update(model: &mut Model, msg: Msg) {
     }
 }
 
-fn view(model: &Model) -> HtmlElement<Msg> {
+fn view(model: &Model) -> Html<Msg> {
     div((
-        "This page has been open for...",
-        ul((
-            li((
-                if model.is_after {
-                    "...at least "
-                } else {
-                    "...less than "
-                },
-                AFTER_SECONDS,
-                " seconds.",
-            )),
-            li(("...", model.seconds, " seconds.")),
-            li(("...", model.milliseconds, " milliseconds.")),
-        )),
-        div((button.onclick(Msg::Reset)("Reset"))),
+        button.on(click(Msg::AddTimer)).push("Add Timer"),
+        model.timers.iter().enumerate().map(view_timer),
     ))
+}
+
+mod timer {
+    struct Timer {}
+
+    #[derive(Clone, Debug, PartialEq)]
+    enum Msg {
+        Tick(f64),
+    }
+
+    fn update(model: &mut Timer, msg: Msg) {}
 }
 
 // fn subs(model: &Model) -> impl Sub<Msg> {

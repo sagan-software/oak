@@ -6,7 +6,8 @@ mod uibench;
 
 use crate::core::Document;
 use crate::dom::{
-    compile_template, CustomElementTemplates, HtmlTemplateElement, Node, NodeParent, NodeSystem,
+    compile_template, CustomElementTemplates, HtmlTemplateElement, Node,
+    NodeParent, NodeSystem,
 };
 use crate::input::{EventDelgationSystem, EventListener};
 use console_error_panic_hook::set_once as set_panic_hook;
@@ -43,9 +44,67 @@ pub fn main() -> Result<(), JsValue> {
     dispatcher.dispatch(&world.res);
     world.maintain();
 
-    std::mem::forget(world);
+    let update = Closure::wrap(Box::new(move |value: JsValue| {
+        let state = value.unchecked_ref::<uibench::AppState>();
+        create_main(&mut world, body, state);
+        // render_main(&mut inner_html, &state);
+        // container.set_inner_html(&inner_html);
+        // inner_html.clear();
+    }) as Box<dyn FnMut(_)>);
+
+    let finish = Closure::wrap(Box::new(move |value: JsValue| {
+        let mut inner_html = String::new();
+        inner_html.push_str("<pre>");
+        let stringified: String =
+            js_sys::JSON::stringify(&value).unwrap().into();
+        inner_html.push_str(&stringified);
+        inner_html.push_str("</pre>");
+        let body = document.body().unwrap();
+        body.set_inner_html(&inner_html);
+    }) as Box<dyn FnMut(_)>);
+
+    uibench::init("oak", "0.1.0");
+    uibench::run(
+        update.as_ref().unchecked_ref(),
+        finish.as_ref().unchecked_ref(),
+    );
+
+    update.forget();
+    finish.forget();
+
+    // std::mem::forget(world);
 
     Ok(())
+}
+
+const MAIN_VIEW: &str = "<div class=Main></div>";
+
+fn create_main(world: &mut World, parent: Entity, data: &uibench::AppState) {
+    log::info!("BALLS");
+    let el = compile_template(world, MAIN_VIEW);
+    let entity = world
+        .create_entity()
+        .with(Node(el.into()))
+        .with(NodeParent(parent))
+        .build();
+    match data.location().as_str() {
+        "table" => create_table(
+            world,
+            entity,
+            data.table().unchecked_ref::<uibench::TableState>(),
+        ),
+        "anim" => create_anim(
+            world,
+            entity,
+            data.table().unchecked_ref::<uibench::AnimState>(),
+        ),
+        "tree" => create_tree(
+            world,
+            entity,
+            data.table().unchecked_ref::<uibench::TreeState>(),
+        ),
+        _ => (),
+    }
 }
 
 const TABLE_CELL_VIEW: &str = "<td class=TableCell></td>";
@@ -63,7 +122,10 @@ fn create_table_cell(world: &mut World, parent: Entity, data: &str) {
             func: {
                 let text = data.to_string();
                 Box::new(move |_| {
-                    web_sys::console::log_2(&JsValue::from_str("Click"), &JsValue::from_str(&text))
+                    web_sys::console::log_2(
+                        &JsValue::from_str("Click"),
+                        &JsValue::from_str(&text),
+                    )
                 })
             },
         })
@@ -72,7 +134,11 @@ fn create_table_cell(world: &mut World, parent: Entity, data: &str) {
 
 const TABLE_ROW_VIEW: &str = "<tr></tr>";
 
-fn create_table_row(world: &mut World, parent: Entity, data: &uibench::TableItemState) {
+fn create_table_row(
+    world: &mut World,
+    parent: Entity,
+    data: &uibench::TableItemState,
+) {
     let el = compile_template(world, TABLE_ROW_VIEW);
     if data.active() {
         el.set_class_name("active");
@@ -98,11 +164,16 @@ fn create_table_row(world: &mut World, parent: Entity, data: &uibench::TableItem
 
 const TABLE_VIEW: &str = "<table class=Table><tbody></tbody></table>";
 
-fn create_table(world: &mut World, parent: Entity, data: &uibench::TableState) {
+fn create_table(
+    world: &mut World,
+    parent: Entity,
+    data: &uibench::TableState,
+) {
     let el = compile_template(world, TABLE_VIEW);
 
     let tbody_el = el.first_element_child().unwrap();
-    let tbody_entity = world.create_entity().with(Node(tbody_el.into())).build();
+    let tbody_entity =
+        world.create_entity().with(Node(tbody_el.into())).build();
 
     for item in data.items().iter() {
         create_table_row(
@@ -121,7 +192,11 @@ fn create_table(world: &mut World, parent: Entity, data: &uibench::TableState) {
 
 const ANIM_BOX_VIEW: &str = "<div class=AnimBox></div>";
 
-fn create_anim_box(world: &mut World, parent: Entity, data: &uibench::AnimBoxState) {
+fn create_anim_box(
+    world: &mut World,
+    parent: Entity,
+    data: &uibench::AnimBoxState,
+) {
     let el = compile_template(world, ANIM_BOX_VIEW);
     let style = el.unchecked_ref::<web_sys::HtmlElement>().style();
 
@@ -153,13 +228,21 @@ fn create_anim(world: &mut World, parent: Entity, data: &uibench::AnimState) {
         .with(NodeParent(parent))
         .build();
     for item in data.items().iter() {
-        create_anim_box(world, entity, item.unchecked_ref::<uibench::AnimBoxState>());
+        create_anim_box(
+            world,
+            entity,
+            item.unchecked_ref::<uibench::AnimBoxState>(),
+        );
     }
 }
 
 const TREE_LEAF_VIEW: &str = "<li class=TreeLeaf></li>";
 
-fn create_tree_leaf(world: &mut World, parent: Entity, data: &uibench::TreeNodeState) {
+fn create_tree_leaf(
+    world: &mut World,
+    parent: Entity,
+    data: &uibench::TreeNodeState,
+) {
     let el = compile_template(world, TREE_LEAF_VIEW);
     el.set_text_content(Some(&data.id().to_string()));
     world
@@ -171,7 +254,11 @@ fn create_tree_leaf(world: &mut World, parent: Entity, data: &uibench::TreeNodeS
 
 const TREE_NODE_VIEW: &str = "<ul class=TreeNode></ul>";
 
-fn create_tree_node(world: &mut World, parent: Entity, data: &uibench::TreeNodeState) {
+fn create_tree_node(
+    world: &mut World,
+    parent: Entity,
+    data: &uibench::TreeNodeState,
+) {
     let el = compile_template(world, TREE_NODE_VIEW);
     let entity = world
         .create_entity()
@@ -204,33 +291,4 @@ fn create_tree(world: &mut World, parent: Entity, data: &uibench::TreeState) {
         entity,
         data.root().unchecked_ref::<uibench::TreeNodeState>(),
     );
-}
-
-const MAIN_VIEW: &str = "<div class=Main></div>";
-
-fn create_main(world: &mut World, parent: Entity, data: &uibench::AppState) {
-    let el = compile_template(world, MAIN_VIEW);
-    let entity = world
-        .create_entity()
-        .with(Node(el.into()))
-        .with(NodeParent(parent))
-        .build();
-    match data.location().as_str() {
-        "table" => create_table(
-            world,
-            entity,
-            data.table().unchecked_ref::<uibench::TableState>(),
-        ),
-        "anim" => create_anim(
-            world,
-            entity,
-            data.table().unchecked_ref::<uibench::AnimState>(),
-        ),
-        "tree" => create_tree(
-            world,
-            entity,
-            data.table().unchecked_ref::<uibench::TreeState>(),
-        ),
-        _ => (),
-    }
 }

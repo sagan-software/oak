@@ -1,48 +1,37 @@
-use crate::{AttrValue, CowStr, ElementBuilder};
-use std::collections::BTreeMap;
+use super::{Attributes, Text};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct BareVoidElement {
     pub tag: &'static str,
 }
 
-impl<Msg> ElementBuilder<Msg> for BareVoidElement {
-    type Output = VoidElement<Msg>;
-    fn attr(self, key: CowStr, val: AttrValue<Msg>) -> Self::Output {
-        let mut attrs = BTreeMap::new();
-        attrs.insert(key, val);
-        Self::Output {
-            tag: self.tag.into(),
-            attrs,
-        }
-    }
-}
-
-impl std::fmt::Display for BareVoidElement {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "<{}/>", self.tag)
-    }
-}
-
 #[derive(Debug, PartialEq, Clone)]
-pub struct VoidElement<Msg> {
-    pub tag: CowStr,
-    pub attrs: BTreeMap<CowStr, AttrValue<Msg>>,
+pub struct VoidElement {
+    pub tag: Text,
+    pub attrs: Attributes,
 }
 
-impl<Msg> ElementBuilder<Msg> for VoidElement<Msg> {
-    type Output = Self;
-    fn attr(self, key: CowStr, val: AttrValue<Msg>) -> Self::Output {
-        let Self { tag, mut attrs } = self;
-        attrs.insert(key, val);
-        Self { tag, attrs }
-    }
+#[macro_export]
+macro_rules! declare_void_elements {
+    ($($x:ident)*) => ($(
+        #[allow(non_upper_case_globals)]
+        pub const $x: $crate::BareVoidElement = $crate::BareVoidElement {
+            tag: stringify!($x)
+        };
+    )*)
 }
 
-impl<Msg> std::fmt::Display for VoidElement<Msg> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "<{}", self.tag)?;
-        write_attrs(f, self.attrs.iter())?;
-        write!(f, "/>")
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn void_elements() {
+        declare_void_elements! {
+            input
+            br
+        }
+        assert_eq!(input, BareVoidElement { tag: "input" });
+        assert_eq!(br, BareVoidElement { tag: "br" });
     }
 }
